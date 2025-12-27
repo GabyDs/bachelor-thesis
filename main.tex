@@ -40,9 +40,9 @@ Silva Schmies \\\\Tutor:\\Dr. Ing. Sergio Eduardo Moya}
 \maketitle
 
 \begin{abstract}
-	El presente trabajo describe el diseño e implementación de un sistema
-	de monitoreo y alerta temprana para áreas protegidas, que combina
-	tecnologías de \gls{iot} con \gls{ia}
+	\hspace{1.5em}El presente trabajo describe el diseño e implementación de un sistema
+	de monitoreo y alerta temprana para áreas protegidas de la
+	\gls{selva-misionera}, que combina tecnologías de \gls{iot} con \gls{ia}
 	para la detección automática de fauna silvestre, personas y vehículos.
 
 	El sistema está compuesto por una red de \glspl{nodo} de captura basados en
@@ -72,7 +72,7 @@ Silva Schmies \\\\Tutor:\\Dr. Ing. Sergio Eduardo Moya}
 	\vspace{2em}
 	\noindent\textbf{Palabras Clave} - Cámaras Trampa, Internet de las Cosas,
 	Inteligencia Artificial, Monitoreo de Fauna, Detección de Intrusos,
-	ESP-MESH, SpeciesNet, YOLO
+	ESP-MESH, SpeciesNet, Selva Misionera
 \end{abstract}
 
 \tableofcontents
@@ -90,7 +90,8 @@ Silva Schmies \\\\Tutor:\\Dr. Ing. Sergio Eduardo Moya}
 \chapter{Introducción}
 
 La conservación de la fauna silvestre y la protección de áreas naturales
-representan desafíos críticos en la actualidad. La pérdida de biodiversidad,
+representan desafíos críticos en la actualidad. En regiones de alta
+biodiversidad como la \gls{selva-misionera}, la pérdida de hábitat,
 la \gls{caza-furtiva} y la intrusión humana en ecosistemas protegidos amenazan
 el equilibrio ecológico y la supervivencia de numerosas especies. Ante
 esta problemática, surge la necesidad de implementar sistemas de monitoreo
@@ -109,8 +110,9 @@ de sensores inalámbricos con algoritmos de \gls{deteccion-objetos} permite
 desarrollar sistemas capaces de identificar automáticamente fauna silvestre,
 personas y vehículos, generando alertas inmediatas ante eventos relevantes.
 
-El presente trabajo propone el diseño e implementación de un sistema de
-monitoreo y alerta temprana para áreas protegidas, que integra una red
+El presente trabajo, desarrollado en el marco de la Universidad Nacional
+de Misiones, propone el diseño e implementación de un sistema de
+monitoreo y alerta temprana para áreas protegidas de la región, que integra una red
 de nodos de captura basados en \gls{ESP32} comunicados mediante \gls{ESP-MESH},
 un servidor de procesamiento con \gls{ia} basado en \gls{speciesnet}, y
 un sistema de notificaciones a través de \gls{telegram-bot}.
@@ -214,15 +216,20 @@ manera progresiva el desarrollo del sistema propuesto:
 % ==============================================================================
 \chapter{Planteamiento del Problema}
 
-\section{Áreas protegidas y conservación de fauna silvestre}
+\section{Contexto regional}
+\subsection{La Selva Misionera y el Bosque Atlántico}
+\subsection{Biodiversidad y especies en peligro}
+\subsection{Importancia ecológica de la región}
 
-\section{Problemática de la vigilancia en áreas remotas}
+\section{Problemáticas de conservación en la región}
+\subsection{Deforestación y fragmentación del hábitat}
+\subsection{Caza furtiva y tráfico de fauna}
+\subsection{Intrusión en áreas protegidas}
+\subsection{Recursos limitados para vigilancia}
 
-\section{Sistemas de monitoreo tradicionales}
+\section{Sistemas de monitoreo actuales}
 \subsection{Cámaras trampa convencionales}
-\subsection{Limitaciones actuales}
-
-\section{Necesidad de detección de intrusos}
+\subsection{Limitaciones de los sistemas existentes}
 
 \section{Justificación del proyecto}
 
@@ -263,6 +270,14 @@ manera progresiva el desarrollo del sistema propuesto:
 \subsection{Contenedorización con Docker}
 \subsection{Framework Django}
 
+\section{Sensores y actuadores}
+\subsection{Sensores de movimiento PIR}
+\subsection{Módulos de cámara}
+
+\section{Diseño y fabricación digital}
+\subsection{Modelado 3D}
+\subsection{Impresión 3D}
+
 % ==============================================================================
 % Capítulo 6: Metodología
 % ==============================================================================
@@ -286,6 +301,8 @@ manera progresiva el desarrollo del sistema propuesto:
 \section{Diseño del hardware}
 \subsection{Selección de componentes}
 \subsection{Nodo de captura con cámara}
+\subsection{Sensor de movimiento PIR}
+\subsection{Carcasa para impresión 3D}
 \subsection{Nodo raíz}
 \subsection{Alimentación y consumo energético}
 
@@ -312,8 +329,10 @@ manera progresiva el desarrollo del sistema propuesto:
 
 \section{Nodo mesh (mesh-node)}
 \subsection{Firmware del nodo de captura}
+\subsection{Integración del sensor PIR}
 \subsection{Captura de imágenes}
 \subsection{Compresión y transmisión}
+\subsection{Fabricación de la carcasa 3D}
 
 \section{Nodo raíz (root-node)}
 \subsection{Firmware del nodo raíz}
@@ -376,7 +395,7 @@ manera progresiva el desarrollo del sistema propuesto:
 % ==============================================================================
 % Referencias
 % ==============================================================================
-\printbibliography[heading=bibintoc]
+\printbibliography[heading=bibnumbered]
 
 % ==============================================================================
 % Anexos
