@@ -5,11 +5,15 @@
 % Codificación y lenguaje
 \usepackage[utf8]{inputenc}
 \usepackage{csquotes}
-\usepackage[spanish]{babel}
+\usepackage[spanish,es-tabla]{babel}
 
 % Imágenes
 \usepackage{graphicx}
+\usepackage[labelfont=bf]{caption}
 \usepackage{subcaption}
+
+% Tablas
+\usepackage{tabularray}
 
 % Bibliografía
 \usepackage[nottoc]{tocbibind}
@@ -176,8 +180,8 @@ manera progresiva el desarrollo del sistema propuesto:
 	      del trabajo.
 
 	\item[Capítulo 5 - Marco Teórico:] Presenta los fundamentos teóricos
-	      sobre \gls{iot}, redes \gls{mesh}, \gls{ia} aplicada a visión por
-	      computadora, y las tecnologías utilizadas.
+	      sobre \gls{iot}, redes \gls{mesh}, \gls{ia} aplicada a \gls{vision-computadora},
+	      y las tecnologías utilizadas.
 
 	\item[Capítulo 6 - Metodología:] Describe el enfoque metodológico,
 	      las etapas de desarrollo y las herramientas empleadas.
@@ -203,13 +207,227 @@ manera progresiva el desarrollo del sistema propuesto:
 % ==============================================================================
 \chapter{Antecedentes}
 
+En los últimos años, el campo de la \gls{ia} aplicada a la \gls{vision-computadora} ha experimentado avances significativos. El desarrollo de
+arquitecturas de \glspl{cnn} cada vez más eficientes, junto con la
+disponibilidad de grandes conjuntos de datos de entrenamiento, ha permitido
+crear modelos capaces de detectar y clasificar objetos en imágenes con
+una precisión sin precedentes \cite{schneider2018deep}. Algoritmos como
+\gls{yolo} \cite{redmon2016yolo} y sus sucesivas versiones, incluyendo
+\gls{yolov5} \cite{jocher2020yolov5}, han revolucionado la \gls{deteccion-objetos},
+permitiendo el procesamiento en \gls{tiempo-real} incluso en dispositivos
+con recursos limitados.
+
+En el ámbito específico del monitoreo de fauna silvestre, estos avances
+han dado lugar a modelos especializados como \gls{speciesnet}, desarrollado
+por Google \cite{gadot2024crop}, que combina detección de objetos con
+\gls{clasificacion-taxonomica} para identificar especies a partir de imágenes
+de \glspl{camara-trampa}. Estos desarrollos han abierto nuevas posibilidades
+para automatizar el análisis de las enormes cantidades de imágenes que
+generan los sistemas de monitoreo.
+
+Paralelamente, la tecnología de \glspl{camara-trampa} ha evolucionado desde
+dispositivos autónomos que almacenan imágenes localmente, hasta sistemas
+más sofisticados con conectividad celular o satelital que permiten la
+transmisión remota de datos. Este capítulo examina tanto los avances en
+\gls{ia} aplicada a la \gls{vision-computadora}, como la evolución de las
+soluciones de monitoreo de fauna, incluyendo sistemas comerciales y
+proyectos de investigación relacionados.
+
 \section{Trabajos relacionados}
 
-\section{Soluciones comerciales existentes}
+En el ámbito local, Barrero y Schmunck \cite{barrero2023microcamara} desarrollaron
+en la Universidad Nacional de Misiones una microcámara de vigilancia orientada
+a la protección de fauna salvaje. Este trabajo propuso el diseño de un
+dispositivo compacto basado en microcontroladores capaz de capturar imágenes
+en áreas naturales. El proyecto sentó las bases para el desarrollo de
+soluciones de bajo costo adaptadas a las necesidades específicas de la
+región misionera, demostrando la viabilidad de utilizar hardware económico
+para aplicaciones de monitoreo ambiental. El presente trabajo extiende
+estos conceptos incorporando comunicación en red \gls{mesh}, procesamiento
+con \gls{ia} y un sistema de alertas en \gls{tiempo-real}.
+
+En el contexto regional argentino, González et al. \cite{gonzalez2022fauna}
+presentaron en el Workshop de Investigadores en Ciencias de la Computación
+(WICC 2022) un sistema de \gls{ia} para la multi-clasificación de fauna
+en fotografías automáticas utilizadas en investigación científica. Este
+trabajo demuestra el creciente interés en la comunidad científica argentina
+por aplicar técnicas de \gls{aprendizaje-automatico} al análisis de imágenes
+de \glspl{camara-trampa}, estableciendo un precedente importante para
+proyectos de monitoreo de fauna en el país.
+
+En el contexto internacional, diversos trabajos han explorado el uso de
+\gls{yolov5} para el análisis automatizado de imágenes de \glspl{camara-trampa}.
+Abood et al. \cite{abood2023yolov5wildlife} presentaron un enfoque innovador
+en la conferencia IEEE ICMNWC 2023, demostrando que los modelos de la familia
+\gls{yolo} pueden adaptarse eficazmente para la detección y clasificación
+de fauna silvestre. Los autores destacaron las ventajas de \gls{yolov5} en
+términos de velocidad de \gls{inferencia} y precisión. De manera similar,
+Njathi et al. \cite{njathi2023annotation} propusieron en IEEE AFRICON 2023
+un sistema eficiente de anotación de imágenes de cámaras trampa basado en
+\gls{yolov5}, enfocándose en reducir el tiempo y esfuerzo requerido para
+etiquetar grandes conjuntos de datos. Ambos trabajos evidencian la idoneidad
+de los modelos \gls{yolo} para aplicaciones de monitoreo de fauna que
+requieren procesamiento eficiente de grandes volúmenes de imágenes.
+
+Un antecedente particularmente relevante para el presente trabajo es el
+sistema propuesto por Whytock et al. \cite{whytock2023iridium}, quienes
+desarrollaron cámaras trampa con \gls{ia} capaces de enviar alertas en
+\gls{tiempo-real} a través de la red satelital Iridium. El estudio, realizado
+en Gabón (África Central), demostró la viabilidad de integrar procesamiento
+con \gls{ia} directamente en dispositivos de campo para detectar fauna y
+enviar notificaciones inmediatas a investigadores y guardaparques. Aunque
+su solución utiliza conectividad satelital ---con costos operativos
+significativos---, el concepto de alertas en tiempo real basadas en
+detección automática constituye un pilar fundamental del sistema propuesto
+en este trabajo. La diferencia principal radica en que nuestra solución
+emplea redes \gls{mesh} locales y conectividad Wi-Fi/TCP, reduciendo
+considerablemente los costos de operación.
+
+Otro proyecto directamente comparable es AiCatcher, desarrollado por
+Mallya \cite{mallya2019aicatcher}, que propone una cámara trampa inteligente
+capaz de realizar \gls{inferencia} directamente en el dispositivo de campo.
+AiCatcher utiliza una Raspberry Pi como unidad de procesamiento para ejecutar
+modelos de detección en el borde (\gls{edge-computing}), y emplea módulos \gls{lora}
+(Adafruit LoRa Bonnets) configurados en una red \gls{lorawan} para la transmisión
+de datos, convirtiendo las señales recibidas en mensajes SMS mediante Twilio.
+Si bien este enfoque es innovador, el uso de Raspberry Pi presenta un consumo
+energético significativamente mayor, limitando la autonomía del dispositivo
+en campo. En contraste, nuestra solución emplea microcontroladores \gls{ESP32}
+de bajo consumo para la captura y transmisión, delegando el procesamiento
+de \gls{ia} a un servidor remoto. Además, el uso de redes \gls{mesh} en
+nuestra propuesta permite una topología de red más flexible y autoorganizada.
 
 \section{Estado del arte}
 
+Vélez et al. \cite{velez2022platforms} realizaron una evaluación exhaustiva
+de las plataformas disponibles para el procesamiento de imágenes de
+\glspl{camara-trampa} utilizando \gls{ia}. Su estudio, publicado en
+\textit{Methods in Ecology and Evolution}, comparó múltiples herramientas
+en términos de precisión, facilidad de uso y requisitos computacionales.
+Los autores concluyeron que, si bien existen diversas opciones de
+\gls{codigo-abierto} y comerciales, la elección de la plataforma adecuada
+depende del contexto específico de cada proyecto, incluyendo el volumen
+de imágenes, las especies objetivo y los recursos disponibles. Este análisis
+proporciona un marco de referencia valioso para la selección de tecnologías
+en proyectos de monitoreo de fauna.
+
+Tabak et al. \cite{tabak2019machine} demostraron la aplicabilidad del
+\gls{aprendizaje-automatico} para clasificar especies animales en imágenes de
+cámaras trampa, alcanzando precisiones superiores al 90\% en la identificación
+de especies comunes. Su trabajo destacó la importancia de contar con conjuntos
+de datos de entrenamiento representativos de las condiciones locales para
+optimizar el rendimiento de los modelos.
+
+Por su parte, Steenweg et al. \cite{steenweg2017scaling} abordaron el desafío
+de escalar las redes de \glspl{camara-trampa} para el monitoreo de biodiversidad
+a nivel global. Los autores argumentaron que la integración de sensores remotos
+en redes coordinadas, combinada con técnicas de análisis automatizado, representa
+el futuro del monitoreo de fauna silvestre, permitiendo obtener datos de
+biodiversidad a escalas espaciales y temporales sin precedentes.
+
+Entre las plataformas más recientes, Hernández et al. \cite{hernandez2024pytorchwildlife}
+presentaron PyTorch-Wildlife, un framework colaborativo de aprendizaje profundo
+desarrollado por Microsoft AI for Good. Esta plataforma, similar en objetivos
+a \gls{speciesnet} de Google, ofrece modelos preentrenados para la detección
+y clasificación de fauna silvestre en imágenes de \glspl{camara-trampa}.
+PyTorch-Wildlife se distingue por su enfoque en la facilidad de uso y la
+integración con el ecosistema \gls{pytorch}, facilitando tanto el despliegue de
+modelos existentes como el entrenamiento de modelos personalizados para
+especies específicas. La existencia de múltiples frameworks de \gls{codigo-abierto}
+respaldados por grandes empresas tecnológicas evidencia la relevancia del
+problema y la madurez de las soluciones disponibles.
+
+Cabe destacar también \gls{megadetector}, desarrollado originalmente por Microsoft
+AI for Earth \cite{beery2019megadetector}, que se ha convertido en una
+herramienta fundamental en el procesamiento de imágenes de \glspl{camara-trampa}.
+A diferencia de los clasificadores de especies, \gls{megadetector} se especializa
+en la detección genérica de animales, humanos y vehículos, funcionando como
+un primer filtro que reduce drásticamente el volumen de imágenes a analizar.
+Esta herramienta ha sido adoptada por más de 60 organizaciones de conservación
+a nivel mundial, demostrando reducciones de hasta el 90\% en el tiempo de
+procesamiento de datos. Su arquitectura modular permite integrarlo como
+etapa previa a clasificadores más específicos como \gls{speciesnet}.
+
+\section{Soluciones comerciales existentes}
+
+En el mercado actual, existen diversas soluciones comerciales diseñadas para
+el monitoreo remoto de fauna. Las \glspl{camara-trampa} con conectividad
+celular, como las series REVEAL de Tactacam \cite{tactacam2024reveal} y las
+líneas Flex de Spypoint \cite{spypoint2024cellular}, son las más extendidas.
+Estos dispositivos permiten capturar imágenes de alta resolución y enviarlas
+a través de redes LTE a una aplicación móvil propietaria. Algunas de sus
+características principales incluyen disparo rápido (menor a 0.5 segundos),
+visión nocturna por infrarrojos y, en modelos recientes, la capacidad de
+solicitar fotografías o videos bajo demanda.
+
+Sin embargo, estas soluciones presentan limitaciones críticas para su adopción
+masiva en proyectos de conservación a gran escala o en regiones remotas. En
+primer lugar, dependen enteramente de la infraestructura de red celular; en
+áreas de selva densa como la de Misiones, la falta de cobertura inalámbrica
+en el interior de las reservas suele ser la norma, invalidando el uso de estos
+dispositivos para alertas remotas. En segundo lugar, el costo operativo es
+elevado, ya que además de que cada cámara en sí tiene un costo de adquisición
+significativo, cada dispositivo requiere un plan de datos independiente, con
+suscripciones mensuales que pueden oscilar entre los 5 y 15 dólares por unidad
+\cite{tactacam2024reveal, spypoint2024cellular}.
+
+En cuanto a la gestión de datos, plataformas como Wildlife Insights
+\cite{wildlifeinsights2024} ofrecen una infraestructura robusta basada en la
+nube para el almacenamiento y análisis de imágenes mediante \gls{ia}. Esta
+herramienta permite filtrar imágenes vacías automáticamente y realizar la
+\gls{clasificacion-taxonomica} de especies, facilitando la colaboración entre
+investigadores. No obstante, Wildlife Insights está orientada principalmente al
+procesamiento posterior (post-hoc) de los datos recolectados manualmente de las
+tarjetas SD, y no está diseñada para la vigilancia y respuesta inmediata ante
+eventos de intrusión o \gls{caza-furtiva} en tiempo real.
+
 \section{Análisis comparativo}
+
+A fin de situar las necesidades identificadas frente a las alternativas y
+trabajos discutidos anteriormente, se presenta a continuación un análisis
+comparativo que resume las principales diferencias técnicas y operativas. En la
+tabla \ref{tab:comparativa-sistemas} se contrastan las características de las
+categorías de soluciones analizadas: cámaras trampa tradicionales, soluciones
+comerciales celulares \cite{tactacam2024reveal, spypoint2024cellular}, el
+sistema satelital de Whytock et al. \cite{whytock2023iridium} y el enfoque
+basado en \gls{edge-computing} de Mallya (AiCatcher) \cite{mallya2019aicatcher}.
+
+\begin{table}[ht]
+	\centering
+	\caption{Comparativa de soluciones de monitoreo y trabajos relacionados.}
+	\label{tab:comparativa-sistemas}
+	\begin{tblr}{
+			width = \textwidth,
+			colspec = {X[2.2,l] *{4}{X[c]}},
+			hlines,
+			vlines,
+			row{1} = {font=\bfseries},
+		}
+		Característica               & Tradicional & Celular \cite{tactacam2024reveal} & Satelital \cite{whytock2023iridium} & \gls{lora} \cite{mallya2019aicatcher} \\
+		Alertas en \gls{tiempo-real} & No          & Sí                                & Sí                                  & Sí                                    \\
+		Infraestructura requerida    & Ninguna     & Operador Celular                  & Red Satelital                       & Puerta de enlace \gls{lora}           \\
+		Procesamiento de \gls{ia}    & Post-hoc    & No / Limitado                     & Edge (Hardware Dedicado)            & Edge (Raspberry Pi)                   \\
+		Costo de adquisición         & Bajo-Medio  & Medio-Alto                        & Muy Alto                            & Medio-Alto                            \\
+		Costo Operativo              & Bajo        & Alto (Plan mensual)               & Muy Alto (Iridium)                  & Bajo (SMS/Twilio)                     \\
+		Autonomía energética         & Muy Alta    & Media                             & Media-Baja                          & Baja (Raspberry Pi)                   \\
+		Escalabilidad                & Laboriosa   & Por suscripción                   & Costo-prohibitiva                   & Media (\gls{lora})                    \\
+		Dependencia de terceros      & No          & Muy Alta                          & Muy Alta                            & Media (Twilio)                        \\
+	\end{tblr}
+\end{table}
+
+Como se desprende de la comparación, si bien existen soluciones de vanguardia,
+el acceso a alertas inmediatas suele estar condicionado por elevados costos
+operativos o dependencia de infraestructura de terceros (celular o satelital).
+Los trabajos de investigación como AiCatcher \cite{mallya2019aicatcher} y el
+sistema de Whytock et al. \cite{whytock2023iridium} demuestran la viabilidad de
+la \gls{ia} para el filtrado en tiempo real, pero enfrentan desafíos en cuanto
+a consumo energético y costos de transmisión.
+
+En este sentido, se identifica una oportunidad para un sistema que combine la
+eficiencia en el consumo de los microcontroladores \gls{ESP32} con la
+capacidad de extensión de cobertura de las redes \gls{mesh}, permitiendo un
+monitoreo inteligente y de bajo costo operativo adaptado a las condiciones
+reales observadas en la \gls{selva-misionera}.
 
 % ==============================================================================
 % Capítulo 3: Planteamiento del Problema
@@ -217,21 +435,132 @@ manera progresiva el desarrollo del sistema propuesto:
 \chapter{Planteamiento del Problema}
 
 \section{Contexto regional}
+
+La provincia de Misiones, ubicada en el extremo noreste de Argentina, alberga
+uno de los ecosistemas más diversos y amenazados del continente. El marco
+geográfico de este proyecto se sitúa en el corazón de la selva paranaense,
+una región que requiere estrategias de conservación urgentes y tecnificadas.
+
 \subsection{La Selva Misionera y el Bosque Atlántico}
+
+La \gls{selva-misionera} representa el remanente continuo más extenso del
+\gls{bosque-atlantico} en el Cono Sur. Originalmente, este bioma cubría una
+vasta superficie desde el este de Brasil hasta el noreste de Argentina y el
+este de Paraguay. Sin embargo, debido a la expansión agrícola y forestal, hoy
+solo sobrevive una pequeña fracción de su extensión original. Misiones
+conserva cerca de un millón de hectáreas de este bosque, lo que la posiciona
+como un refugio crítico para la biodiversidad regional y global.
+
 \subsection{Biodiversidad y especies en peligro}
+
+Esta región es hogar de una variedad excepcional de flora y fauna. Entre las
+especies más emblemáticas se encuentra el yaguareté (\textit{Panthera onca}),
+monumento natural nacional y símbolo de la selva, cuya población se encuentra
+en peligro crítico debido a la pérdida de hábitat y la persecución directa.
+Otras especies de importancia incluyen el tapir, el oso hormiguero gigante, y
+una gran diversidad de aves y primates que dependen de la conectividad del
+bosque para su supervivencia. La presencia de estos grandes felinos y herbívoros
+es un indicador clave del estado de salud del ecosistema, pero su monitoreo
+en densas zonas de selva es extremadamente complejo.
+
 \subsection{Importancia ecológica de la región}
 
+La importancia de la \gls{selva-misionera} trasciende la mera preservación de
+especies; actúa como regulador climático, protector de cuencas hídricas y
+proveedor de servicios ecosistémicos esenciales para la región. La Ley de
+Ordenamiento Territorial de Bosques Nativos en Argentina clasifica a gran parte
+de la superficie de Misiones en categorías de máxima conservación (Categoría I -
+Rojo), lo que impone la necesidad de una vigilancia constante para evitar la
+degradación de estas áreas protegidas frente a actividades ilícitas.
+
 \section{Problemáticas de conservación en la región}
+
+A pesar de los esfuerzos institucionales, las áreas protegidas de Misiones
+enfrentan amenazas persistentes que comprometen la integridad de sus ecosistemas.
+
 \subsection{Deforestación y fragmentación del hábitat}
+
+La pérdida de cobertura boscosa por actividades agrícolas no autorizadas y la
+extracción ilegal de madera noble son problemas recurrentes. La fragmentación
+del hábitat obliga a las especies de gran tamaño a desplazarse por áreas no
+protegidas, aumentando el riesgo de conflictos con humanos y reduciendo la
+viabilidad genética de las poblaciones aisladas.
+
 \subsection{Caza furtiva y tráfico de fauna}
+
+La \gls{caza-furtiva} sigue siendo uno de los mayores desafíos. A pesar de la
+prohibición total de la caza en la provincia, la incursión de cazadores en el
+interior de parques provinciales y reservas privadas es frecuente. Los cazadores
+utilizan técnicas de acecho y trampas que no solo afectan a las especies de
+interés comercial o cinegético, sino que degradan la fauna en su totalidad y
+ponen en riesgo la seguridad de los guardaparques.
+
 \subsection{Intrusión en áreas protegidas}
+
+La falta de un control perimetral efectivo permite la entrada de personas y
+vehículos no autorizados para actividades como la pesca ilegal, la extracción
+de palmitos o el desmonte encubierto. Sin un sistema de alerta temprana, estas
+intrusiones solo se descubren a posteriori, cuando el daño ambiental ya ha
+sido perpetrado.
+
 \subsection{Recursos limitados para vigilancia}
 
+El sistema de guardaparques de Misiones, aunque altamente capacitado, es
+insuficiente en número para cubrir los cientos de miles de hectáreas bajo su
+custodia. Las patrullas terrestres consumen tiempo y combustible, y están
+limitadas por la geografía accidentada y la densidad de la selva. La tecnología
+actual de monitoreo (uso de cámaras trampa tradicionales) genera datos valiosos
+pero no permite una respuesta operativa rápida para detener ilícitos en curso.
+
 \section{Sistemas de monitoreo actuales}
+
+Actualmente, el monitoreo biológico y de vigilancia en Misiones depende de
+métodos que, si bien son efectivos para la investigación, presentan brechas
+operativas para la seguridad ambiental.
+
 \subsection{Cámaras trampa convencionales}
+
+El uso de \glspl{camara-trampa} pasivas es el estándar de oro para la
+investigación de fauna. Se instalan en puntos estratégicos y capturan imágenes
+activadas por sensores de calor y movimiento. Sin embargo, estas cámaras son
+dispositivos aislados; las imágenes se almacenan localmente en tarjetas SD que
+deben ser retiradas físicamente por personal especializado cada varios meses.
+
 \subsection{Limitaciones de los sistemas existentes}
 
+La principal limitación es el retraso temporal entre el evento y su análisis.
+Un acto de \gls{caza-furtiva} detectado por una cámara tradicional solo será
+descubierto meses después, impidiendo cualquier acción disuasoria o legal
+inmediata. Además, el alto volumen de imágenes capturadas (frecuentemente
+disparadas por vegetación en movimiento) requiere cientos de horas-hombre para
+su clasificación manual. Las soluciones comerciales con conectividad celular,
+aunque existan, son inviables debido a la falta de señal en zonas profundas y
+los altos costos operativos de mantenimiento de múltiples líneas móviles.
+
 \section{Justificación del proyecto}
+
+Dada la crítica situación de biodiversidad en Misiones y las limitaciones de
+los sistemas actuales, se justifica el desarrollo de una solución tecnológica
+que sea:
+\begin{enumerate}
+	\item \textbf{De Bajo Costo:} Permitiendo un despliegue masivo con
+	      presupuesto limitado, utilizando hardware basado en \gls{ESP32} y
+	      componentes de \gls{codigo-abierto}.
+	\item \textbf{Con Conectividad Independiente:} Utilizando redes \gls{mesh}
+	      que no requieran infraestructura celular previa, adaptándose a la topología
+	      de la selva.
+	\item \textbf{Inteligente y Automatizada:} Integrando modelos de \gls{ia}
+	      como \gls{speciesnet} para filtrar imágenes relevantes en \gls{tiempo-real},
+	      notificando inmediatamente ante eventos críticos (intrusos o fauna en
+	      peligro).
+	\item \textbf{Fabricable Localmente:} Empleando tecnologías como la
+	      \gls{impresion-3d} para la creación de carcasas duraderas y personalizadas.
+\end{enumerate}
+
+Este proyecto no solo representa un aporte técnico en el área de redes de
+sensores e inteligencia artificial, sino que constituye una herramienta de
+aplicación directa para fortalecer la vigilancia de las áreas protegidas de
+la región.
 
 % ==============================================================================
 % Capítulo 4: Objetivos y Alcance
@@ -252,31 +581,183 @@ manera progresiva el desarrollo del sistema propuesto:
 \chapter{Marco Teórico}
 
 \section{Internet de las Cosas (IoT)}
+
+El \gls{iot} se define como la red de objetos físicos que incorporan sensores,
+software y otras tecnologías con el fin de conectar e intercambiar datos con
+otros dispositivos y sistemas a través de internet. En el contexto de la
+conservación ambiental, el IoT permite la creación de redes de monitoreo
+autónomas que pueden operar en ubicaciones remotas con mínima intervención
+humana.
+
 \subsection{Arquitecturas IoT}
+
+Una arquitectura típica de IoT se compone de tres capas fundamentales:
+\begin{enumerate}
+	\item \textbf{Capa de Percepción:} Formada por los sensores y actuadores
+	      que interactúan directamente con el entorno físico.
+	\item \textbf{Capa de Red:} Encargada de la transmisión de datos desde los
+	      nodos sensores hacia los sistemas de procesamiento.
+	\item \textbf{Capa de Aplicación:} Donde los datos son procesados,
+	      almacenados y presentados al usuario final.
+\end{enumerate}
+El sistema desarrollado en esta tesis abarca estas tres capas, utilizando
+nodos \gls{ESP32} en la percepción, \gls{ESP-MESH} en la red y un servidor
+\gls{django} en la aplicación.
+
 \subsection{Protocolos de comunicación inalámbrica}
 
+La elección del protocolo de comunicación es crítica en entornos rurales.
+Mientras que protocolos como Bluetooth y ZigBee son ideales para corto alcance
+y baja potencia, y LoRa es excelente para muy largo alcance con bajo ancho de
+banda, las redes Wi-Fi (802.11) ofrecen un equilibrio adecuado para la
+transmisión de imágenes si se gestionan adecuadamente mediante una topología
+\gls{mesh}, permitiendo extender la cobertura sin depender de una única
+estación base.
+
 \section{Redes Mesh}
+
+Una red de malla o \gls{mesh} es una topología en la que los nodos se conectan
+entre sí de forma dinámica y no jerárquica, cooperando para propagar los datos
+a través de la red. Esta arquitectura es especialmente robusta frente a fallos
+de nodos individuales, ya que la red puede reconfigurarse automáticamente para
+encontrar nuevas rutas.
+
 \subsection{Topologías de red}
+
+A diferencia de las topologías en estrella (comunes en redes Wi-Fi domésticas
+donde todos los dispositivos dependen de un mismo Punto de Acceso), las redes
+\gls{mesh} permiten que cada \gls{nodo} actúe también como un repetidor. Esto
+facilita el despliegue en terrenos difíciles o boscosos, donde los obstáculos
+físicos limitan la línea de vista. La red se organiza en una estructura de
+árbol donde existe un \gls{nodo-raiz} que actúa como puerta de enlace, y
+nodos intermedios que transportan los datos de los nodos hoja.
+
 \subsection{ESP-MESH y Mwifi}
 
+\gls{ESP-MESH} es el protocolo propietario de Espressif basado en Wi-Fi que
+permite conectar hasta miles de dispositivos \gls{ESP32} en una sola red. Su
+principal ventaja es la capacidad de autoorganización y autocuración: si un
+nodo intermedio falla, sus nodos descendientes buscan automáticamente un nuevo
+padre. Por otro lado, \gls{mwifi} es un componente del \gls{ESP-MDF} que
+simplifica el desarrollo de aplicaciones mesh al proporcionar una capa de
+abstracción de alto nivel, facilitando la transmisión de paquetes TCP/UDP
+y la gestión de la topología desde el código de usuario.
+
 \section{Inteligencia Artificial aplicada a visión por computadora}
+
+La \gls{vision-computadora} busca emular la capacidad humana de interpretar
+imágenes digitales. Los avances en este campo están impulsados por el
+\gls{aprendizaje-automatico} y, más específicamente, por el aprendizaje profundo
+(deep learning).
+
 \subsection{Redes neuronales convolucionales (CNN)}
+
+Las \glspl{cnn} son arquitecturas especializadas en procesar datos con una
+topología de cuadrícula, como las imágenes. Funcionan mediante la aplicación de
+filtros o núcleos que extraen características fundamentales (bordes, texturas,
+formas compleja) en distintas capas jerárquicas. Esta capacidad de extracción
+automática de características las hace ideales para la clasificación de fauna y
+la detección de intrusos.
+
 \subsection{Detección de objetos con YOLO}
+
+\gls{yolo} es uno de los algoritmos de detección de objetos más populares
+debido a su velocidad y precisión. A diferencia de otros métodos que analizan
+una imagen en múltiples pasadas, YOLO (\textit{You Only Look Once}) trata la
+detección como un problema de regresión único, prediciendo las \glspl{bounding-box}
+y las probabilidades de clase simultáneamente para toda la imagen. El uso de
+\gls{yolov5} en este proyecto se justifica por su excelente equilibrio entre
+rendimiento computacional y exactitud, permitiendo procesar múltiples flujos de
+imágenes en el servidor.
+
 \subsection{SpeciesNet de Google}
 
+\gls{speciesnet} es un sistema de \gls{ia} de \gls{codigo-abierto} desarrollado
+por Google \cite{gadot2024crop} diseñado específicamente para el análisis de
+fotos de \glspl{camara-trampa}. Utiliza modelos preentrenados potentes para
+identificar cientos de especies globales, permitiendo realizar la
+\gls{clasificacion-taxonomica} de manera automatizada. En este sistema,
+SpeciesNet actúa como el núcleo de procesamiento que valida si una imagen
+capturada por los nodos contiene fauna de interés, personas o vehículos.
+
 \section{Tecnologías de desarrollo}
+
+Para la implementación del sistema se han seleccionado herramientas que
+garantizan la modularidad, facilidad de mantenimiento e interoperabilidad.
+
 \subsection{Microcontroladores ESP32}
+
+El \gls{ESP32} es un System on Chip (SoC) de bajo costo y bajo consumo con Wi-Fi
+y Bluetooth integrados. Pertenece a la familia de microcontroladores de
+Espressif Systems y destaca por su procesador de doble núcleo, rica variedad de
+periféricos y su idoneidad para aplicaciones de IoT industriales y ambientales.
+
 \subsection{ESP-IDF y ESP-MDF}
+
+El \gls{ESP-IDF} es el entorno de desarrollo oficial para el ESP32, basado en
+FreeRTOS, que permite un control preciso sobre el hardware y la gestión de la
+energía. Sobre este entorno se construye el \gls{ESP-MDF} (Mesh Development
+Framework), que proporciona las herramientas específicas para la creación y
+gestión de redes mesh, incluyendo capacidades de actualización remota (OTA).
+
 \subsection{Contenedorización con Docker}
+
+\gls{docker} es una plataforma que permite empaquetar software en unidades
+estandarizadas llamadas contenedores, las cuales incluyen todo lo necesario para
+que la aplicación se ejecute correctamente. El uso de \gls{docker} y
+\gls{docker-compose} en este proyecto facilita el despliegue del servidor de
+procesamiento (\gls{speciesnet}, base de datos y backend) en cualquier máquina,
+asegurando que el entorno de ejecución sea idéntico al de desarrollo.
+
 \subsection{Framework Django}
 
+\gls{django} es un framework web de alto nivel escrito en Python que fomenta el
+desarrollo rápido y un diseño limpio. Se utiliza para construir el servidor
+central que recibe las imágenes de la red mesh, interactúa con el sistema de
+\gls{ia} y gestiona la base de datos \gls{postgresql}. Su arquitectura MVT
+(Modelo-Vista-Plantilla) permite una separación clara entre la lógica de datos
+y la interfaz de usuario.
+
 \section{Sensores y actuadores}
+
+Los componentes físicos periféricos permiten la interacción del nodo con el
+entorno, detectando eventos y capturando información visual.
+
 \subsection{Sensores de movimiento PIR}
+
+El \gls{sensor-pir} (Passive Infrared) detecta movimiento mediante la medición
+de los cambios en los niveles de radiación infrarroja emitida por objetos
+cercanos. En este proyecto, el sensor PIR actúa como el disparador del sistema:
+cuando se detecta calor en movimiento (característico de humanos o animales), el
+microcontrolador sale de su modo de bajo consumo y activa la cámara para la
+captura.
+
 \subsection{Módulos de cámara}
 
+Se utilizan módulos de cámara compatibles con el ESP32 (como la OV2640), que
+permiten capturar imágenes en resoluciones de hasta 2 megapíxeles. Estos módulos
+están integrados en placas de desarrollo como la ESP32-CAM, proporcionando una
+solución compacta para la adquisición visionaria de datos con un consumo
+controlado.
+
 \section{Diseño y fabricación digital}
+
+La protección física del hardware es tan importante como el software en
+entornos de selva subtropical.
+
 \subsection{Modelado 3D}
-\subsection{Impresión 3D}
+
+El diseño de la \gls{carcasa} se realiza mediante herramientas de \gls{cad},
+permitiendo crear estructuras precisas que protejan los componentes de la
+humedad y la lluvia, a la vez que proporcionan aperturas para la lente de la
+cámara y el ángulo de visión del sensor PIR.
+
+\subsection{Fabricación aditiva}
+
+La \gls{impresion-3d} es la tecnología utilizada para materializar los diseños
+CAD. Permite iterar rápidamente sobre prototipos y fabricar carcasas robustas
+utilizando filamentos resistentes como el PETG o el ASA, que soportan mejor la
+radiación UV y las altas temperaturas exteriores en comparación con el PLA.
 
 % ==============================================================================
 % Capítulo 6: Metodología
