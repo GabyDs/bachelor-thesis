@@ -67,8 +67,207 @@ Silva Schmies \\\\Tutor:\\Dr. Ing. Sergio Eduardo Moya}
 \printnoidxglossary[type=main]
 \printnoidxglossary[type=\acronymtype]
 
+% ==============================================================================
+% Capítulo 1: Introducción
+% ==============================================================================
 \chapter{Introducción}
 
-\gls{ia} \gls{miniz}
+\gls{ia} \gls{miniz} \cite{redmon2016yolo}
+
+\section{Contexto y motivación}
+
+\section{Planteamiento del problema}
+
+\section{Justificación}
+
+\section{Objetivos}
+\subsection{Objetivo general}
+\subsection{Objetivos específicos}
+
+\section{Alcance y limitaciones}
+
+\section{Estructura del documento}
+
+% ==============================================================================
+% Capítulo 2: Marco Teórico
+% ==============================================================================
+\chapter{Marco Teórico}
+
+\section{Áreas protegidas y conservación de fauna silvestre}
+
+\section{Sistemas de vigilancia y monitoreo}
+\subsection{Cámaras trampa tradicionales}
+\subsection{Sistemas de detección de intrusos}
+
+\section{Internet de las Cosas (IoT)}
+\subsection{Arquitecturas IoT}
+\subsection{Protocolos de comunicación inalámbrica}
+
+\section{Redes Mesh}
+\subsection{Topologías de red}
+\subsection{ESP-MESH y Mwifi}
+
+\section{Inteligencia Artificial aplicada a visión por computadora}
+\subsection{Redes neuronales convolucionales (CNN)}
+\subsection{Detección de objetos con YOLO}
+\subsection{SpeciesNet de Google}
+
+\section{Tecnologías de desarrollo}
+\subsection{Microcontroladores ESP32}
+\subsection{ESP-IDF y ESP-MDF}
+\subsection{Contenedorización con Docker}
+\subsection{Framework Django}
+
+% ==============================================================================
+% Capítulo 3: Antecedentes
+% ==============================================================================
+\chapter{Antecedentes}
+
+\section{Trabajos relacionados}
+
+\section{Soluciones comerciales existentes}
+
+\section{Estado del arte}
+
+\section{Análisis comparativo}
+
+% ==============================================================================
+% Capítulo 4: Metodología
+% ==============================================================================
+\chapter{Metodología}
+
+\section{Enfoque metodológico}
+
+\section{Etapas del desarrollo}
+
+\section{Herramientas y tecnologías utilizadas}
+
+\section{Métricas de evaluación}
+
+% ==============================================================================
+% Capítulo 5: Diseño del Sistema
+% ==============================================================================
+\chapter{Diseño del Sistema}
+
+\section{Arquitectura general}
+
+\section{Diseño del hardware}
+\subsection{Selección de componentes}
+\subsection{Nodo de captura con cámara}
+\subsection{Nodo raíz}
+\subsection{Alimentación y consumo energético}
+
+\section{Diseño de la red mesh}
+\subsection{Topología de la red}
+\subsection{Protocolo de comunicación}
+\subsection{Formato de datos}
+
+\section{Diseño del servicio de detección}
+\subsection{Servidor de inferencia con SpeciesNet}
+\subsection{Detección de animales, humanos y vehículos}
+\subsection{Anotación de imágenes con bounding boxes}
+
+\section{Diseño del servidor de aplicación}
+\subsection{Arquitectura de servicios}
+\subsection{Gestión de imágenes}
+\subsection{Interfaz web}
+\subsection{Bot de Telegram y sistema de alertas}
+
+% ==============================================================================
+% Capítulo 6: Implementación
+% ==============================================================================
+\chapter{Implementación}
+
+\section{Nodo mesh (mesh-node)}
+\subsection{Firmware del nodo de captura}
+\subsection{Captura de imágenes}
+\subsection{Compresión y transmisión}
+
+\section{Nodo raíz (root-node)}
+\subsection{Firmware del nodo raíz}
+\subsection{Conexión con servidor TCP}
+\subsection{Gestión de la red mesh}
+
+\section{Servicio de detección (wildlife-detection)}
+\subsection{Contenedor Docker con SpeciesNet}
+\subsection{API de inferencia con LitServe}
+\subsection{Procesamiento de imágenes}
+
+\section{Servidor de aplicación (server)}
+\subsection{Aplicación Django}
+\subsection{Integración con SpeciesNet}
+\subsection{Bot de Telegram y sistema de alertas}
+\subsection{Base de datos PostgreSQL}
+\subsection{Despliegue con Docker Compose}
+
+% ==============================================================================
+% Capítulo 7: Pruebas y Resultados
+% ==============================================================================
+\chapter{Pruebas y Resultados}
+
+\section{Ambiente de pruebas}
+
+\section{Pruebas de conectividad y red mesh}
+\subsection{Alcance de la red}
+\subsection{Latencia de transmisión}
+\subsection{Estabilidad de la conexión}
+
+\section{Pruebas de detección}
+\subsection{Detección de fauna silvestre}
+\subsection{Detección de humanos}
+\subsection{Detección de vehículos}
+
+\section{Evaluación del modelo de IA}
+\subsection{Precisión y recall}
+\subsection{Tiempo de inferencia}
+
+\section{Pruebas de consumo energético}
+
+\section{Pruebas del sistema de alertas}
+\subsection{Tiempo de respuesta}
+
+\section{Análisis de resultados}
+
+% ==============================================================================
+% Capítulo 8: Conclusiones
+% ==============================================================================
+\chapter{Conclusiones}
+
+\section{Conclusiones generales}
+
+\section{Aportes del trabajo}
+
+\section{Trabajos futuros}
+
+\section{Recomendaciones}
+
+% ==============================================================================
+% Referencias
+% ==============================================================================
+\printbibliography[heading=bibintoc]
+
+% ==============================================================================
+% Anexos
+% ==============================================================================
+\appendix
+
+\chapter{Esquemáticos del hardware}
+
+\chapter{Código fuente relevante}
+\section{Firmware del nodo mesh}
+\section{Firmware del nodo raíz}
+\section{Servidor de detección}
+\section{Aplicación Django}
+
+\chapter{Manual de instalación y configuración}
+\section{Configuración del firmware}
+\section{Despliegue del servidor}
+\section{Configuración del bot de Telegram}
+
+\chapter{Manual de usuario}
+
+\chapter{Especificaciones técnicas}
+
+\chapter{Análisis de viabilidad económica}
 
 \end{document}
