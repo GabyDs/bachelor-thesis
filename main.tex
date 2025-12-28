@@ -819,8 +819,8 @@ aspectos:
 	\item Sistema de notificaciones mediante bot de \gls{telegram-bot}.
 	\item Pruebas de funcionamiento en entorno controlado (laboratorio).
 	\item Validación a pequeña escala en condiciones de campo reales, bajo
-	      circunstancias climáticas favorables (día soleado, sin lluvia),
-	      dadas las limitaciones de protección del prototipo.
+	      circunstancias climáticas favorables, dadas las limitaciones de
+	      protección del prototipo.
 \end{itemize}
 
 \subsection{Fuera del alcance}
@@ -913,182 +913,351 @@ de varios órdenes de magnitud que habilita respuestas operativas antes imposibl
 
 \section{Internet de las Cosas (IoT)}
 
-El \gls{iot} se define como la red de objetos físicos que incorporan sensores,
-software y otras tecnologías con el fin de conectar e intercambiar datos con
-otros dispositivos y sistemas a través de internet. En el contexto de la
-conservación ambiental, el IoT permite la creación de redes de monitoreo
-autónomas que pueden operar en ubicaciones remotas con mínima intervención
-humana.
+El \gls{iot} representa un paradigma de conectividad donde objetos físicos
+---equipados con sensores, capacidad de procesamiento y conectividad de red---
+intercambian datos con otros dispositivos y sistemas a través de internet o
+redes locales. Esta tecnología ha experimentado un crecimiento exponencial en
+las últimas décadas, habilitando aplicaciones que van desde la automatización
+del hogar hasta el monitoreo ambiental a gran escala \cite{steenweg2017scaling}.
+
+En el contexto de la conservación ambiental, el \gls{iot} permite la creación
+de redes de monitoreo autónomas capaces de operar en ubicaciones remotas con
+mínima intervención humana. Los sistemas de \glspl{camara-trampa} inteligentes
+representan una aplicación específica de este paradigma, donde la combinación
+de sensores, procesamiento embebido y conectividad inalámbrica extiende las
+capacidades tradicionales de monitoreo de fauna \cite{whytock2023iridium}.
 
 \subsection{Arquitecturas IoT}
 
-Una arquitectura típica de IoT se compone de tres capas fundamentales:
-\begin{enumerate}
-	\item \textbf{Capa de Percepción:} Formada por los sensores y actuadores
-	      que interactúan directamente con el entorno físico.
-	\item \textbf{Capa de Red:} Encargada de la transmisión de datos desde los
-	      nodos sensores hacia los sistemas de procesamiento.
-	\item \textbf{Capa de Aplicación:} Donde los datos son procesados,
-	      almacenados y presentados al usuario final.
-\end{enumerate}
+Una arquitectura típica de \gls{iot} se compone de tres capas fundamentales:
+
+\begin{description}
+	\item[Capa de Percepción:] Formada por los sensores y actuadores que
+	      interactúan directamente con el entorno físico. En este proyecto,
+	      incluye los sensores \gls{pir} y los módulos de cámara.
+	\item[Capa de Red:] Encargada de la transmisión de datos desde los nodos
+	      sensores hacia los sistemas de procesamiento. Aquí se implementa
+	      la red \gls{ESP-MESH} que permite la comunicación entre nodos.
+	\item[Capa de Aplicación:] Donde los datos son procesados, almacenados y
+	      presentados al usuario final. Corresponde al servidor \gls{django}
+	      con el modelo de \gls{ia} y el sistema de notificaciones.
+\end{description}
+
 El sistema desarrollado en esta tesis abarca estas tres capas, utilizando
 nodos \gls{ESP32} en la percepción, \gls{ESP-MESH} en la red y un servidor
-\gls{django} en la aplicación.
+\gls{django} con \gls{speciesnet} en la aplicación.
 
 \subsection{Protocolos de comunicación inalámbrica}
 
-La elección del protocolo de comunicación es crítica en entornos rurales.
-Mientras que protocolos como Bluetooth y ZigBee son ideales para corto alcance
-y baja potencia, y LoRa es excelente para muy largo alcance con bajo ancho de
-banda, las redes Wi-Fi (802.11) ofrecen un equilibrio adecuado para la
-transmisión de imágenes si se gestionan adecuadamente mediante una topología
-\gls{mesh}, permitiendo extender la cobertura sin depender de una única
-estación base.
+La elección del protocolo de comunicación es crítica en entornos rurales o
+silvestres donde la infraestructura de red tradicional es inexistente. Cada
+tecnología presenta compromisos entre alcance, consumo energético y ancho
+de banda:
+
+\begin{description}
+	\item[Bluetooth Low Energy (BLE):] Ideal para corto alcance (hasta 100m)
+	      y muy bajo consumo, pero con ancho de banda insuficiente para
+	      transmisión de imágenes.
+	\item[ZigBee:] Diseñado para redes de sensores con bajo consumo, pero
+	      limitado en velocidad de transferencia y complejidad de implementación.
+	\item[LoRa/LoRaWAN:] Excelente para muy largo alcance (varios kilómetros)
+	      con bajo consumo, pero el ancho de banda extremadamente limitado
+	      (decenas de bytes por segundo) lo hace inadecuado para transmisión
+	      de imágenes \cite{whytock2023iridium}.
+	\item[Wi-Fi (802.11):] Ofrece alto ancho de banda suficiente para imágenes,
+	      pero típicamente requiere infraestructura centralizada y tiene mayor
+	      consumo energético.
+\end{description}
+
+Las redes \gls{mesh} basadas en Wi-Fi, como \gls{ESP-MESH}, ofrecen un equilibrio
+adecuado: permiten la transmisión de imágenes gracias al ancho de banda del
+protocolo 802.11, mientras extienden la cobertura sin depender de una única
+estación base o infraestructura celular preexistente.
 
 \section{Redes Mesh}
 
 Una red de malla o \gls{mesh} es una topología en la que los nodos se conectan
-entre sí de forma dinámica y no jerárquica, cooperando para propagar los datos
-a través de la red. Esta arquitectura es especialmente robusta frente a fallos
-de nodos individuales, ya que la red puede reconfigurarse automáticamente para
-encontrar nuevas rutas.
+entre sí de forma dinámica, cooperando para propagar los datos a través de la
+red. Esta arquitectura es especialmente robusta frente a fallos de nodos
+individuales, ya que la red puede reconfigurarse automáticamente para encontrar
+rutas alternativas \cite{espmesh2023}.
 
 \subsection{Topologías de red}
 
-A diferencia de las topologías en estrella (comunes en redes Wi-Fi domésticas
-donde todos los dispositivos dependen de un mismo Punto de Acceso), las redes
-\gls{mesh} permiten que cada \gls{nodo} actúe también como un repetidor. Esto
-facilita el despliegue en terrenos difíciles o boscosos, donde los obstáculos
-físicos limitan la línea de vista. La red se organiza en una estructura de
-árbol donde existe un \gls{nodo-raiz} que actúa como puerta de enlace, y
-nodos intermedios que transportan los datos de los nodos hoja.
+Las topologías de red determinan cómo se organizan y comunican los dispositivos:
 
-\subsection{ESP-MESH y Mwifi}
+\begin{description}
+	\item[Topología en estrella:] Común en redes Wi-Fi domésticas, donde todos
+	      los dispositivos dependen de un único Punto de Acceso central. Si el
+	      AP falla, toda la red queda inoperativa.
+	\item[Topología en árbol:] Estructura jerárquica donde existe un
+	      \gls{nodo-raiz} que actúa como puerta de enlace hacia redes externas,
+	      nodos intermedios que extienden la cobertura, y nodos hoja que
+	      únicamente transmiten sus propios datos.
+	\item[Topología mesh pura:] Cada nodo puede comunicarse con múltiples
+	      vecinos, creando redundancia en las rutas de comunicación.
+\end{description}
 
-\gls{ESP-MESH} es el protocolo propietario de Espressif basado en Wi-Fi que
-permite conectar hasta miles de dispositivos \gls{ESP32} en una sola red. Su
-principal ventaja es la capacidad de autoorganización y autocuración: si un
-nodo intermedio falla, sus nodos descendientes buscan automáticamente un nuevo
-padre. Por otro lado, \gls{mwifi} es un componente del \gls{ESP-MDF} que
-simplifica el desarrollo de aplicaciones mesh al proporcionar una capa de
-abstracción de alto nivel, facilitando la transmisión de paquetes TCP/UDP
-y la gestión de la topología desde el código de usuario.
+\gls{ESP-MESH} implementa una topología de árbol con capacidades mesh: cada
+\gls{nodo} puede actuar simultáneamente como estación (conectada a un padre)
+y como Punto de Acceso (para nodos hijos), utilizando el modo \gls{AP-STA}.
+Esto facilita el despliegue en terrenos difíciles o boscosos, donde los
+obstáculos físicos limitan la línea de vista directa.
+
+\subsection{ESP-MESH: características técnicas}
+
+\gls{ESP-MESH} es el protocolo desarrollado por Espressif basado en el estándar
+IEEE 802.11, que permite conectar cientos de dispositivos \gls{ESP32} en una
+sola red \cite{espmesh2023}. Sus principales características incluyen:
+
+\begin{description}
+	\item[Autoorganización:] Los nodos seleccionan automáticamente su padre
+	      óptimo basándose en la intensidad de señal (\gls{rssi}) y la carga de la red.
+	\item[\Gls{autocuracion}:] Si un nodo intermedio falla o pierde conectividad,
+	      sus nodos descendientes buscan y se conectan automáticamente a un
+	      nuevo padre, sin intervención manual.
+	\item[Profundidad configurable:] La red puede extenderse hasta una
+	      profundidad máxima definida por el usuario (típicamente 6-10 niveles).
+	\item[Transmisión de datos:] Soporta comunicación unicast (a un nodo
+	      específico), multicast (a un grupo) y broadcast (a todos los nodos).
+\end{description}
+
+\subsection{Componente Mwifi del ESP-MDF}
+
+\gls{mwifi} es un componente del \gls{ESP-MDF} que proporciona una capa de
+abstracción sobre \gls{ESP-MESH}, simplificando el desarrollo de aplicaciones.
+Sus principales aportes incluyen:
+
+\begin{itemize}
+	\item APIs de alto nivel para envío y recepción de datos fragmentados
+	\item Gestión automática de la fragmentación de paquetes grandes (como
+	      imágenes) que exceden el tamaño máximo de trama Wi-Fi
+	\item Soporte para transmisión \gls{tcp} y UDP sobre la red mesh
+	\item Eventos de \gls{callback} para monitorear el estado de la topología
+	\item Herramientas de depuración integradas
+\end{itemize}
+
+La capacidad de fragmentar y reensamblar datos es crítica para este proyecto,
+ya que las imágenes capturadas por los nodos exceden significativamente el
+tamaño máximo de paquete soportado por el protocolo mesh.
 
 \section{Inteligencia Artificial aplicada a visión por computadora}
 
 La \gls{vision-computadora} busca emular la capacidad humana de interpretar
-imágenes digitales. Los avances en este campo están impulsados por el
-\gls{aprendizaje-automatico} y, más específicamente, por el aprendizaje profundo
-(deep learning).
+imágenes digitales. Los avances recientes en este campo, impulsados por el
+\gls{aprendizaje-automatico} y específicamente por el aprendizaje profundo
+(\textit{deep learning}), han revolucionado el procesamiento automático de
+imágenes de \glspl{camara-trampa} \cite{norouzzadeh2018cameratrap}.
 
 \subsection{Redes neuronales convolucionales (CNN)}
 
-Las \glspl{cnn} son arquitecturas especializadas en procesar datos con una
-topología de cuadrícula, como las imágenes. Funcionan mediante la aplicación de
-filtros o núcleos que extraen características fundamentales (bordes, texturas,
-formas compleja) en distintas capas jerárquicas. Esta capacidad de extracción
-automática de características las hace ideales para la clasificación de fauna y
-la detección de intrusos.
+Las \glspl{cnn} son arquitecturas de redes neuronales especializadas en
+procesar datos con estructura de cuadrícula, como las imágenes
+\cite{goodfellow2016deep}. Funcionan mediante la aplicación secuencial de
+filtros convolucionales que extraen características en niveles de abstracción
+creciente: las primeras capas detectan bordes y texturas básicas, mientras
+que las capas profundas reconocen patrones complejos como formas de animales
+o rostros humanos.
+
+Esta capacidad de extracción automática de características ---que elimina la
+necesidad de diseño manual de descriptores--- ha convertido a las \glspl{cnn}
+en la herramienta fundamental para la clasificación de fauna y la detección
+de intrusos en imágenes de \glspl{camara-trampa} \cite{tabak2019machine}.
 
 \subsection{Detección de objetos con YOLO}
 
-\gls{yolo} es uno de los algoritmos de detección de objetos más populares
-debido a su velocidad y precisión. A diferencia de otros métodos que analizan
-una imagen en múltiples pasadas, YOLO (\textit{You Only Look Once}) trata la
-detección como un problema de regresión único, prediciendo las \glspl{bounding-box}
-y las probabilidades de clase simultáneamente para toda la imagen. El uso de
-\gls{yolov5} en este proyecto se justifica por su excelente equilibrio entre
-rendimiento computacional y exactitud, permitiendo procesar múltiples flujos de
-imágenes en el servidor.
+\gls{yolo} (\textit{You Only Look Once}) es uno de los algoritmos de
+\gls{deteccion-objetos} más utilizados debido a su velocidad y precisión
+\cite{redmon2016yolo}. A diferencia de métodos tradicionales que analizan una
+imagen en múltiples pasadas, YOLO trata la detección como un problema de
+regresión único, prediciendo las \glspl{bounding-box} y las probabilidades
+de clase simultáneamente para toda la imagen en una sola evaluación.
+
+La arquitectura \gls{yolov5} \cite{jocher2020yolov5}, implementada sobre
+\gls{pytorch}, ofrece un excelente equilibrio entre rendimiento computacional
+y exactitud. Sus variantes (desde YOLOv5n para dispositivos embebidos hasta
+YOLOv5x para máxima precisión) permiten adaptar el modelo a los recursos
+disponibles.
+
+\subsection{MegaDetector}
+
+\gls{megadetector} es un modelo de detección desarrollado por Microsoft AI
+for Earth \cite{beery2019megadetector}, específicamente diseñado para imágenes
+de \glspl{camara-trampa}. A diferencia de clasificadores que intentan
+identificar especies directamente, MegaDetector se enfoca en una tarea más
+simple: detectar la presencia y ubicación de tres categorías principales:
+
+\begin{itemize}
+	\item Animales (sin distinción de especie)
+	\item Personas
+	\item Vehículos
+\end{itemize}
+
+Esta aproximación en dos etapas ---primero detectar, luego clasificar--- ha
+demostrado ser más robusta y generalizable que intentar resolver ambos
+problemas simultáneamente \cite{velez2022platforms}.
 
 \subsection{SpeciesNet de Google}
 
 \gls{speciesnet} es un sistema de \gls{ia} de \gls{codigo-abierto} desarrollado
-por Google \cite{gadot2024crop} diseñado específicamente para el análisis de
-fotos de \glspl{camara-trampa}. Utiliza modelos preentrenados potentes para
-identificar cientos de especies globales, permitiendo realizar la
-\gls{clasificacion-taxonomica} de manera automatizada. En este sistema,
-SpeciesNet actúa como el núcleo de procesamiento que valida si una imagen
-capturada por los nodos contiene fauna de interés, personas o vehículos.
+por Google \cite{gadot2024crop}, diseñado específicamente para el análisis de
+imágenes de \glspl{camara-trampa}. Combina las capacidades de detección con
+modelos de \gls{clasificacion-taxonomica} entrenados con millones de imágenes
+de cientos de especies a nivel global.
+
+El pipeline de SpeciesNet opera en dos fases:
+\begin{enumerate}
+	\item \textbf{Detección:} Identifica regiones de interés en la imagen
+	      (animales, personas, vehículos) similar a MegaDetector.
+	\item \textbf{Clasificación:} Para las regiones identificadas como animales,
+	      aplica un clasificador taxonómico que predice familia, género y
+	      especie.
+\end{enumerate}
+
+En este proyecto, SpeciesNet actúa como el núcleo de procesamiento del
+servidor, validando si las imágenes capturadas por los nodos contienen
+fauna de interés, personas o vehículos, y generando las alertas correspondientes.
 
 \section{Tecnologías de desarrollo}
 
 Para la implementación del sistema se han seleccionado herramientas que
-garantizan la modularidad, facilidad de mantenimiento e interoperabilidad.
+garantizan modularidad, facilidad de mantenimiento e interoperabilidad,
+priorizando tecnologías de \gls{codigo-abierto} cuando sea posible.
 
 \subsection{Microcontroladores ESP32}
 
-El \gls{ESP32} es un System on Chip (SoC) de bajo costo y bajo consumo con Wi-Fi
-y Bluetooth integrados. Pertenece a la familia de microcontroladores de
-Espressif Systems y destaca por su procesador de doble núcleo, rica variedad de
-periféricos y su idoneidad para aplicaciones de IoT industriales y ambientales.
+El \gls{ESP32} es un \gls{soc} de bajo costo diseñado por Espressif Systems,
+que integra conectividad Wi-Fi (802.11 b/g/n) y Bluetooth en un único chip
+\cite{espressif2023esp32}. Sus principales características técnicas incluyen:
+
+\begin{itemize}
+	\item Procesador Xtensa LX6 de doble núcleo a 240 MHz
+	\item 520 KB de SRAM interna
+	\item Soporte para memoria flash externa (hasta 16 MB)
+	\item Múltiples modos de bajo consumo (\gls{deep-sleep} $<$ 10 µA)
+	\item Rico conjunto de periféricos: SPI, I2C, UART, ADC, DAC, PWM
+\end{itemize}
+
+La variante ESP32-CAM incorpora un módulo de cámara OV2640 y ranura para
+tarjeta microSD, proporcionando una plataforma compacta para aplicaciones
+de captura de imagen con conectividad inalámbrica.
 
 \subsection{ESP-IDF y ESP-MDF}
 
-El \gls{ESP-IDF} es el entorno de desarrollo oficial para el ESP32, basado en
-FreeRTOS, que permite un control preciso sobre el hardware y la gestión de la
-energía. Sobre este entorno se construye el \gls{ESP-MDF} (Mesh Development
-Framework), que proporciona las herramientas específicas para la creación y
-gestión de redes mesh, incluyendo capacidades de actualización remota (OTA).
+El \gls{ESP-IDF} (IoT Development Framework) es el entorno de desarrollo
+oficial para el ESP32 \cite{espmesh2023}, basado en \gls{freertos}. Proporciona
+control preciso sobre el hardware, gestión de energía y acceso a todas las
+funcionalidades del chip.
+
+Sobre este entorno, el \gls{ESP-MDF} (Mesh Development Framework) agrega
+herramientas específicas para redes mesh:
+
+\begin{itemize}
+	\item Componente \gls{mwifi} para comunicación mesh de alto nivel
+	\item Gestión automática de topología y enrutamiento
+	\item Capacidades de actualización remota de \gls{firmware} \gls{ota}
+	\item Herramientas de depuración y monitoreo de red
+\end{itemize}
 
 \subsection{Contenedorización con Docker}
 
-\gls{docker} es una plataforma que permite empaquetar software en unidades
-estandarizadas llamadas contenedores, las cuales incluyen todo lo necesario para
-que la aplicación se ejecute correctamente. El uso de \gls{docker} y
-\gls{docker-compose} en este proyecto facilita el despliegue del servidor de
-procesamiento (\gls{speciesnet}, base de datos y backend) en cualquier máquina,
-asegurando que el entorno de ejecución sea idéntico al de desarrollo.
+\gls{docker} es una plataforma de contenedorización que permite empaquetar
+aplicaciones junto con todas sus dependencias en unidades estandarizadas
+llamadas contenedores. El uso de \gls{docker} y \gls{docker-compose} en este
+proyecto facilita el despliegue del servidor de procesamiento en cualquier
+máquina, asegurando que el entorno de ejecución sea idéntico al de desarrollo.
+
+Los componentes del servidor se organizan en contenedores separados:
+\begin{itemize}
+	\item Contenedor de \gls{speciesnet} para inferencia de IA
+	\item Contenedor de base de datos \gls{postgresql}
+	\item Contenedor del backend \gls{django}
+\end{itemize}
 
 \subsection{Framework Django}
 
-\gls{django} es un framework web de alto nivel escrito en Python que fomenta el
-desarrollo rápido y un diseño limpio. Se utiliza para construir el servidor
-central que recibe las imágenes de la red mesh, interactúa con el sistema de
-\gls{ia} y gestiona la base de datos \gls{postgresql}. Su arquitectura MVT
-(Modelo-Vista-Plantilla) permite una separación clara entre la lógica de datos
-y la interfaz de usuario.
+\gls{django} es un framework web de alto nivel escrito en Python que fomenta
+el desarrollo rápido y un diseño limpio. Se utiliza para construir el servidor
+central que recibe las imágenes de la red \gls{mesh}, interactúa con el sistema
+de \gls{ia} y gestiona el almacenamiento persistente.
+
+Su arquitectura MVT (Modelo-Vista-Plantilla) permite una separación clara entre
+la lógica de datos, el procesamiento de solicitudes y la presentación de
+resultados al usuario.
 
 \section{Sensores y actuadores}
 
 Los componentes físicos periféricos permiten la interacción del nodo con el
-entorno, detectando eventos y capturando información visual.
+entorno, detectando eventos y capturando información visual. La selección de
+estos componentes determina las capacidades y limitaciones del sistema.
 
 \subsection{Sensores de movimiento PIR}
 
-El \gls{sensor-pir} (Passive Infrared) detecta movimiento mediante la medición
-de los cambios en los niveles de radiación infrarroja emitida por objetos
-cercanos. En este proyecto, el sensor PIR actúa como el disparador del sistema:
-cuando se detecta calor en movimiento (característico de humanos o animales), el
-microcontrolador sale de su modo de bajo consumo y activa la cámara para la
-captura.
+El \gls{sensor-pir} (\textit{Passive Infrared}) detecta movimiento mediante la
+medición de cambios en los niveles de radiación infrarroja emitida por objetos
+en su campo de visión. El sensor contiene un elemento piroeléctrico dividido
+en dos zonas: cuando un objeto emisor de calor (como un humano o animal) cruza
+de una zona a otra, se genera una diferencia de voltaje que activa la detección.
 
-\subsection{Módulos de cámara}
+Los sensores PIR domóticos utilizados en este proyecto tienen un rango de
+detección optimizado para objetos del tamaño de humanos, lo que limita la
+capacidad de detectar fauna de pequeño porte pero es adecuado para animales
+medianos y grandes como tapires, yaguaretés o ciervos.
 
-Se utilizan módulos de cámara compatibles con el ESP32 (como la OV2640), que
-permiten capturar imágenes en resoluciones de hasta 2 megapíxeles. Estos módulos
-están integrados en placas de desarrollo como la ESP32-CAM, proporcionando una
-solución compacta para la adquisición visionaria de datos con un consumo
-controlado.
+\subsection{Módulos de cámara OV2640}
+
+El OV2640 es un sensor de imagen CMOS de 2 megapíxeles fabricado por OmniVision,
+ampliamente utilizado en aplicaciones embebidas por su bajo costo y consumo
+moderado. Sus especificaciones técnicas principales incluyen:
+
+\begin{itemize}
+	\item Resolución máxima: 1600 × 1200 píxeles (UXGA)
+	\item Formatos de salida: \gls{jpeg}, RGB565, YUV422
+	\item Interfaz: SCCB (compatible con I2C) para control, paralelo para datos
+	\item Compresión JPEG integrada en hardware
+	\item Consumo típico: 125 mW en operación activa
+\end{itemize}
+
+El módulo está integrado en placas de desarrollo como la ESP32-CAM, que incluye
+slot para tarjeta microSD, LED flash, y antena Wi-Fi externa opcional. La
+compresión JPEG en hardware es particularmente útil para reducir el tamaño de
+las imágenes antes de su transmisión por la red \gls{mesh}.
+
+El lente incluido en los módulos comerciales típicamente incorpora un filtro
+\gls{ir}, lo que limita la operación a condiciones de luz diurna.
 
 \section{Diseño y fabricación digital}
 
-La protección física del hardware es tan importante como el software en
-entornos de selva subtropical.
+La protección física del hardware es fundamental para la operación del sistema
+en entornos exteriores, donde los componentes electrónicos están expuestos a
+condiciones ambientales adversas.
 
 \subsection{Modelado 3D}
 
-El diseño de la \gls{carcasa} se realiza mediante herramientas de \gls{cad},
-permitiendo crear estructuras precisas que protejan los componentes de la
-humedad y la lluvia, a la vez que proporcionan aperturas para la lente de la
-cámara y el ángulo de visión del sensor PIR.
+El diseño de la \gls{carcasa} protectora se realiza mediante herramientas de
+\gls{cad}, permitiendo crear estructuras precisas adaptadas a los componentes
+específicos del nodo. Los requisitos principales del diseño incluyen:
+
+\begin{itemize}
+	\item Protección contra humedad y polvo
+	\item Aperturas dimensionadas para la lente de cámara y sensor PIR
+	\item Espacio para baterías y circuitos de carga
+	\item Puntos de montaje para fijación en árboles o postes
+	\item Acceso a la ranura de tarjeta SD sin desmontar el dispositivo
+\end{itemize}
 
 \subsection{Fabricación aditiva}
 
-La \gls{impresion-3d} es la tecnología utilizada para materializar los diseños
-CAD. Permite iterar rápidamente sobre prototipos y fabricar carcasas robustas
-utilizando filamentos resistentes como el PETG o el ASA, que soportan mejor la
-radiación UV y las altas temperaturas exteriores en comparación con el PLA.
+La \gls{impresion-3d} mediante tecnología \gls{fdm} es la técnica utilizada para
+materializar los diseños. Esta tecnología permite iterar rápidamente sobre
+prototipos y fabricar piezas personalizadas sin inversión en moldes.
+
+La selección del material de impresión es crítica para la durabilidad. Para los
+prototipos de validación de este proyecto se utiliza \gls{pla}, dado que las
+pruebas de campo se realizarán bajo condiciones climáticas favorables y
+no se planea exposición prolongada a la intemperie. Sin embargo, el mismo modelo
+3D puede ser fabricado en materiales más resistentes como \gls{petg} o \gls{asa} en
+fases posteriores de despliegue que requieran operación permanente en exteriores.
 
 % ==============================================================================
 % Capítulo 6: Metodología

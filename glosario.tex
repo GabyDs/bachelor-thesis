@@ -4,12 +4,16 @@
 
 % A
 \newacronym{api}{API}{Application Programming Interface}
+\newacronym{asa}{ASA}{Acrilonitrilo Estireno Acrilato}
 
 % C
 \newacronym[longplural={Redes Neuronales Convolucionales}]{cnn}{CNN}{Red Neuronal Convolucional}
+\newacronym{cmos}{CMOS}{Complementary Metal-Oxide-Semiconductor}
 
 % F
+\newacronym{fdm}{FDM}{Modelado por Deposición Fundida}
 \newacronym{fps}{FPS}{Frames Per Second}
+\newacronym{freertos}{FreeRTOS}{Free Real-Time Operating System}
 
 % I
 \newacronym{ia}{IA}{Inteligencia Artificial}
@@ -25,14 +29,25 @@
 % M
 \newacronym{ml}{ML}{Machine Learning}
 
+% O
+\newacronym{ota}{OTA}{Over-The-Air}
+
 % P
 \newacronym{pir}{PIR}{Infrarrojo Pasivo}
+\newacronym{pla}{PLA}{Ácido Poliláctico}
+\newacronym{petg}{PETG}{Tereftalato de Polietileno Glicol}
+
+% R
+\newacronym{rssi}{RSSI}{Received Signal Strength Indicator}
 
 % S
 \newacronym{soc}{SoC}{System on Chip}
 
 % T
 \newacronym{tcp}{TCP}{Transmission Control Protocol}
+
+% U
+\newacronym{udp}{UDP}{User Datagram Protocol}
 
 % Y
 \newacronym{yolo}{YOLO}{You Only Look Once}
@@ -109,6 +124,21 @@
 \newglossaryentry{grado-proteccion-ip}{
 	name=grado de protección IP,
 	description={Código estándar definido por la norma IEC 60529 que indica el nivel de protección de un dispositivo contra la intrusión de sólidos (primer dígito) y líquidos (segundo dígito). Por ejemplo, IP67 indica protección total contra polvo y contra inmersión temporal en agua}
+}
+
+\newglossaryentry{deep-sleep}{
+	name=deep sleep,
+	description={Modo de bajo consumo extremo en microcontroladores donde la mayoría de los periféricos y el procesador principal se apagan, manteniendo solo un núcleo mínimo capaz de despertar el sistema ante eventos externos como señales de sensores o temporizadores}
+}
+
+\newglossaryentry{autocuracion}{
+	name=autocuración,
+	description={Capacidad de una red mesh para reconfigurarse automáticamente cuando un nodo falla, permitiendo que los nodos afectados encuentren rutas alternativas sin intervención manual}
+}
+
+\newglossaryentry{callback}{
+	name=callback,
+	description={Función que se pasa como argumento a otra función y que será invocada cuando ocurra un evento específico, permitiendo la programación asíncrona y orientada a eventos}
 }
 
 \newglossaryentry{aprendizaje-automatico}{
