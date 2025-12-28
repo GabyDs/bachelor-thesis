@@ -1474,39 +1474,341 @@ Las pruebas del sistema completo se realizaron en dos fases:
 
 \section{Arquitectura general}
 
+El sistema propuesto se compone de tres capas principales que trabajan de forma
+coordinada para lograr la detección y notificación de eventos en tiempo
+operativo:
+
+\begin{enumerate}
+	\item \textbf{Capa de percepción:} Formada por los nodos de cámara
+	      (mesh-node) equipados con sensor \gls{pir} y módulo de cámara,
+	      responsables de detectar movimiento y capturar imágenes.
+	\item \textbf{Capa de red:} Constituida por la red \gls{ESP-MESH} que
+	      permite la comunicación entre nodos de cámara y el nodo raíz,
+	      extendiendo la cobertura sin infraestructura adicional.
+	\item \textbf{Capa de aplicación:} Compuesta por el servidor de
+	      procesamiento que recibe las imágenes, realiza la inferencia
+	      mediante \gls{ia} y notifica al usuario a través de \gls{telegram-bot}.
+\end{enumerate}
+
+El flujo de datos del sistema opera de la siguiente manera:
+
+\begin{enumerate}
+	\item El sensor \gls{pir} detecta movimiento y genera una interrupción
+	      en el microcontrolador.
+	\item El nodo de cámara captura una imagen en formato \gls{jpeg}.
+	\item La imagen se fragmenta y transmite a través de la red \gls{mesh}
+	      hasta el nodo raíz.
+	\item El nodo raíz envía la imagen al servidor mediante una petición
+	      HTTP POST.
+	\item El servidor procesa la imagen con \gls{speciesnet} (que incluye
+	      \gls{megadetector} y modelos de clasificación taxonómica).
+	\item Si se detecta un objeto de interés con alto grado de confianza,
+	      el bot de Telegram notifica al usuario enviando la imagen original,
+	      la imagen anotada con las detecciones, y la lista de clasificaciones.
+	\item Las imágenes y metadatos se almacenan en la base de datos.
+\end{enumerate}
+
 \section{Nodo de cámara (mesh-node)}
+
 \subsection{Selección de componentes}
+
+El nodo de cámara se construye alrededor de los siguientes componentes
+principales:
+
+\begin{description}
+	\item[Microcontrolador:] Módulo ESP32-CAM de AI-Thinker, que integra un
+	      \gls{ESP32} con cámara OV2640 y ranura para tarjeta microSD en una
+	      placa compacta.
+	\item[Sensor de movimiento:] Módulo HC-SR501, un sensor \gls{pir} de bajo
+	      costo con sensibilidad y tiempo de retardo ajustables mediante
+	      potenciómetros.
+	\item[Regulador de voltaje:] Módulo \gls{buck-converter} basado en el
+	      circuito integrado LM2596, que acepta voltajes de entrada entre
+	      4.5V y 40V, permitiendo alimentación desde packs de baterías
+	      \gls{18650} en configuración 2S (7.4V nominal).
+\end{description}
+
 \subsection{Diseño del firmware}
+
+El firmware del nodo de cámara se desarrolló utilizando \gls{ESP-IDF} y
+\gls{ESP-MDF}, implementando las siguientes funcionalidades:
+
+\begin{itemize}
+	\item Inicialización y configuración de la cámara OV2640
+	\item Configuración del pin GPIO como interrupción externa para el sensor PIR
+	\item Conexión a la red \gls{ESP-MESH} como nodo hijo
+	\item Captura y compresión de imágenes en formato \gls{jpeg}
+	\item Almacenamiento local de imágenes en tarjeta microSD como respaldo
+	\item Transmisión de imágenes mediante \gls{mwifi}
+	\item Gestión del modo \gls{power-save} para reducir consumo energético
+\end{itemize}
+
 \subsection{Captura de imágenes}
+
+La captura de imágenes se realiza con los siguientes parámetros:
+
+\begin{description}
+	\item[Resolución:] 640 $\times$ 480 píxeles (VGA)
+	\item[Formato:] \gls{jpeg} con compresión alta
+	\item[Tamaño típico:] Inferior a 8 KB por imagen, ajustando el nivel
+	      de compresión para cumplir con el límite de \gls{ESP-MDF}
+\end{description}
+
+El tamaño de imagen se mantiene por debajo del límite de 8 KB impuesto
+por \gls{ESP-MDF} para el tamaño máximo de paquete de aplicación. Este
+límite determina el nivel de compresión \gls{jpeg} necesario, priorizando
+la transmisión confiable sobre la calidad de imagen.
+
 \subsection{Integración del sensor PIR}
+
+El sensor HC-SR501 se conecta a un pin GPIO del ESP32-CAM configurado
+como fuente de interrupción externa. Cuando el sensor detecta movimiento
+(cambio en la radiación infrarroja), genera una señal HIGH que dispara
+la rutina de captura de imagen.
+
+El sensor permite ajustar:
+\begin{itemize}
+	\item \textbf{Sensibilidad:} Distancia de detección (3-7 metros)
+	\item \textbf{Tiempo de retardo:} Duración de la señal HIGH (5s-300s)
+\end{itemize}
+
 \subsection{Compresión y transmisión}
+
+La transmisión de imágenes a través de la red \gls{mesh} utiliza el
+componente \gls{mwifi} del \gls{ESP-MDF}. Dado que las imágenes se
+mantienen por debajo del límite de 8 KB, se transmiten como un único
+paquete de aplicación, simplificando el manejo de datos.
+
+El componente \gls{mwifi} proporciona:
+
+\begin{itemize}
+	\item Fragmentación automática a nivel de capa de enlace
+	\item Ventana deslizante para control de flujo
+	\item Retransmisión automática de paquetes perdidos
+	\item Reensamblado de fragmentos en el destino
+\end{itemize}
+
 \subsection{Carcasa para impresión 3D}
 
+La carcasa del nodo fue diseñada en Autodesk Fusion 360 e impresa en
+\gls{pla}. El diseño contempla:
+
+\begin{itemize}
+	\item Apertura frontal para la lente de la cámara
+	\item Apertura superior para el domo del sensor PIR
+	\item Espacio interno para el módulo \gls{buck-converter}
+	\item Orificio para cable de alimentación hacia pack de baterías externo
+	\item Ranura de acceso a la tarjeta microSD
+	\item Puntos de montaje para fijación en superficies
+\end{itemize}
+
 \section{Nodo raíz (root-node)}
+
 \subsection{Diseño del hardware}
+
+El nodo raíz utiliza una placa de desarrollo ESP32 DevKit V1, sin
+módulo de cámara, que actúa como puerta de enlace entre la red
+\gls{mesh} y el servidor de aplicación.
+
 \subsection{Firmware del nodo raíz}
+
+El firmware del nodo raíz implementa:
+
+\begin{itemize}
+	\item Inicialización como nodo raíz de la red \gls{ESP-MESH}
+	\item Recepción y reensamblado de imágenes fragmentadas desde los
+	      nodos hijos
+	\item Conexión Wi-Fi a un router doméstico para acceso a internet
+	\item Cliente HTTP para envío de imágenes al servidor
+\end{itemize}
+
 \subsection{Conexión con servidor TCP}
+
+El nodo raíz envía las imágenes recibidas al servidor de aplicación
+mediante peticiones HTTP POST. Cada imagen se transmite como cuerpo
+de la petición junto con metadatos (identificador del nodo origen,
+timestamp).
+
+La conexión al servidor se realiza a través de Wi-Fi conectado a un
+router doméstico con acceso a internet. En la sección de trabajos
+futuros se discute la posibilidad de reemplazar este enlace por
+tecnologías de mayor alcance para despliegues en zonas remotas.
+
 \subsection{Gestión de la red mesh}
 
+El nodo raíz es responsable de:
+
+\begin{itemize}
+	\item Mantener la topología de la red mesh
+	\item Gestionar la conexión y desconexión de nodos hijos
+	\item Enrutar los datos desde cualquier nodo hasta sí mismo
+	\item Proporcionar sincronización de tiempo a la red
+\end{itemize}
+
+La red está configurada para soportar hasta 6 niveles de profundidad,
+aunque en las pruebas realizadas se utilizaron únicamente 3 nodos.
+
 \section{Red mesh}
+
 \subsection{Topología de la red}
+
+La red \gls{ESP-MESH} se organiza en una topología de árbol donde:
+
+\begin{description}
+	\item[Nodo raíz:] Único punto de conexión con la red externa (router Wi-Fi)
+	\item[Nodos intermedios:] Pueden existir nodos que actúen como repetidores
+	\item[Nodos hoja:] Los nodos de cámara que capturan y transmiten imágenes
+\end{description}
+
+Cada nodo opera en modo \gls{AP-STA}, actuando simultáneamente como
+punto de acceso para nodos hijos y como estación conectada a su nodo padre.
+
 \subsection{Protocolo de comunicación}
+
+La comunicación utiliza el protocolo \gls{ESP-MESH} implementado sobre
+Wi-Fi 802.11, con las siguientes características:
+
+\begin{itemize}
+	\item Autoorganización: los nodos seleccionan su padre óptimo basándose
+	      en \gls{rssi}
+	\item \Gls{autocuracion}: reconexión automática ante fallos de nodos
+	\item Soporte para mensajes unicast y broadcast
+	\item Fragmentación y reensamblado de datos grandes mediante \gls{mwifi}
+\end{itemize}
+
 \subsection{Formato de datos}
 
+Las imágenes se transmiten como datos binarios (\gls{jpeg}) precedidos
+de un encabezado que incluye el tamaño total de la imagen y el
+identificador del nodo origen.
+
 \section{Servicio de detección (wildlife-detection)}
+
 \subsection{Arquitectura del servicio}
+
+El servicio de detección se implementa como un contenedor \gls{docker}
+independiente que expone una \gls{api} REST para inferencia de imágenes.
+
 \subsection{Contenedor Docker con SpeciesNet}
+
+El contenedor incluye:
+
+\begin{itemize}
+	\item \gls{speciesnet} con modelos preentrenados
+	\item \gls{megadetector} para detección de animales, personas y vehículos
+	\item Modelos \gls{yolov5} para clasificación taxonómica
+	\item Servidor HTTP basado en LitServe
+\end{itemize}
+
 \subsection{API de inferencia}
+
+El servicio expone un endpoint \texttt{/predict} que:
+
+\begin{enumerate}
+	\item Recibe una imagen en formato \gls{jpeg}
+	\item Ejecuta el pipeline de detección y clasificación
+	\item Retorna las detecciones con \glspl{bounding-box}, confianzas y
+	      etiquetas taxonómicas
+\end{enumerate}
+
 \subsection{Detección y clasificación}
 
+El pipeline de \gls{speciesnet} opera en dos fases:
+
+\begin{enumerate}
+	\item \textbf{Detección:} \gls{megadetector} identifica regiones de
+	      interés clasificándolas como animal, persona o vehículo.
+	\item \textbf{Clasificación:} Para las regiones detectadas como animales,
+	      se aplican modelos de clasificación taxonómica que predicen
+	      familia, género y especie.
+\end{enumerate}
+
 \section{Servidor de aplicación (server)}
+
 \subsection{Arquitectura Django}
+
+El servidor de aplicación se desarrolló utilizando \gls{django}, implementando:
+
+\begin{itemize}
+	\item Endpoint HTTP para recepción de imágenes desde el nodo raíz
+	\item Integración con el servicio de detección vía HTTP REST
+	\item Almacenamiento de imágenes y metadatos
+	\item Bot de Telegram para notificaciones
+	\item Interfaz web para visualización de resultados
+\end{itemize}
+
 \subsection{Gestión de imágenes}
+
+Las imágenes se almacenan en un volumen \gls{docker} compartido:
+
+\begin{itemize}
+	\item Imágenes originales recibidas desde los nodos
+	\item Imágenes anotadas con \glspl{bounding-box} generadas por el
+	      servicio de detección
+\end{itemize}
+
+En la base de datos se almacenan únicamente los paths a las imágenes
+junto con los metadatos de detección.
+
 \subsection{Bot de Telegram y sistema de alertas}
+
+El sistema de alertas utiliza la librería \texttt{python-telegram-bot}
+para enviar notificaciones cuando se detectan objetos de interés con
+alto grado de confianza.
+
+Cada notificación incluye:
+
+\begin{itemize}
+	\item Imagen original capturada por el nodo
+	\item Imagen anotada con las \glspl{bounding-box} de las detecciones
+	\item Información sobre cantidad y confianza de las detecciones
+	\item Etiquetas de clasificación taxonómica de mayor confianza
+\end{itemize}
+
 \subsection{Base de datos PostgreSQL}
+
+La base de datos \gls{postgresql} almacena:
+
+\begin{itemize}
+	\item Registros de imágenes con paths y timestamps
+	\item Resultados de detección (clases, confianzas, coordenadas)
+	\item Clasificaciones taxonómicas
+	\item Configuración del sistema
+\end{itemize}
+
 \subsection{Despliegue con Docker Compose}
 
+El servidor se despliega mediante \gls{docker-compose}, orquestando
+los siguientes servicios:
+
+\begin{itemize}
+	\item Contenedor de la aplicación \gls{django}
+	\item Contenedor de \gls{postgresql}
+	\item Contenedor del servicio de detección con \gls{speciesnet}
+\end{itemize}
+
 \section{Alimentación y consumo energético}
+
+Los nodos de cámara se alimentan mediante packs de baterías \gls{18650}
+en configuración 2S (dos celdas en serie), proporcionando un voltaje
+nominal de 7.4V. El módulo \gls{buck-converter} LM2596 reduce este
+voltaje a 5V para alimentar el ESP32-CAM.
+
+El consumo energético se midió en tres estados de operación:
+
+\begin{description}
+	\item[Modo \gls{power-save}:] Consumo reducido mientras el nodo espera
+	      eventos, con transmisión Wi-Fi limitada pero CPU activo.
+	\item[Captura de imagen:] Consumo elevado momentáneo durante la
+	      activación de la cámara y compresión JPEG.
+	\item[Transmisión:] Máximo consumo durante el envío de datos por
+	      Wi-Fi a través de la red mesh.
+\end{description}
+
+Es importante destacar que el sistema utiliza el modo \gls{power-save}
+de \gls{ESP-MDF} en lugar de \gls{deep-sleep}. El modo power save reduce el
+consumo limitando el tiempo de transmisión Wi-Fi activa, mientras mantiene el
+CPU funcionando para responder a eventos de la red y del sensor PIR.
 
 % ==============================================================================
 % Capítulo 8: Pruebas y Resultados
@@ -1515,26 +1817,395 @@ Las pruebas del sistema completo se realizaron en dos fases:
 
 \section{Ambiente de pruebas}
 
-\section{Pruebas de conectividad y red mesh}
-\subsection{Alcance de la red}
+\subsection{Configuración del hardware}
+
+Las pruebas se realizaron utilizando la siguiente configuración de hardware:
+
+\begin{itemize}
+	\item 3 nodos de cámara (ESP32-CAM con sensor HC-SR501)
+	\item 1 nodo raíz (ESP32 DevKit V1)
+	\item Packs de baterías \gls{18650} en configuración 2S
+	\item Router Wi-Fi doméstico para conexión a internet
+	\item Servidor con procesador multinúcleo y GPU NVIDIA para inferencia
+\end{itemize}
+
+% TODO: Agregar foto del hardware ensamblado
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=0.8\textwidth]{figures/hardware-ensamblado.jpg}
+	\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}
+			[Foto del nodo de cámara ensamblado con carcasa 3D]
+			\vspace{3cm}}}
+	\caption{Nodo de cámara completamente ensamblado.}
+	\label{fig:hardware-ensamblado}
+\end{figure}
+
+\subsection{Configuración del software}
+
+El software se desplegó con la siguiente configuración:
+
+\begin{itemize}
+	\item Firmware compilado con ESP-IDF v5.x y ESP-MDF
+	\item Contenedores Docker ejecutándose en servidor Linux
+	\item Base de datos PostgreSQL
+	\item Servicio de inferencia con \gls{speciesnet} y LitServe
+	\item Bot de Telegram configurado para notificaciones
+\end{itemize}
+
+% TODO: Agregar screenshot del docker-compose corriendo
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=\textwidth]{figures/docker-compose-running.png}
+	\fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
+			[Screenshot de docker-compose ps mostrando servicios activos]
+			\vspace{2cm}}}
+	\caption{Servicios del servidor ejecutándose mediante Docker Compose.}
+	\label{fig:docker-compose-running}
+\end{figure}
+
+\section{Pruebas de laboratorio}
+
+Las pruebas de laboratorio se realizaron en condiciones controladas de
+interior, verificando el funcionamiento individual de cada componente
+antes de la integración.
+
+\subsection{Pruebas de captura de imagen}
+
+Se verificó la correcta captura de imágenes por parte del módulo OV2640,
+evaluando:
+
+\begin{itemize}
+	\item Inicialización correcta de la cámara
+	\item Calidad de imagen a diferentes niveles de compresión
+	\item Tamaño de archivo resultante (objetivo: < 8 KB)
+	\item Tiempo de captura y compresión
+\end{itemize}
+
+% TODO: Agregar ejemplos de imágenes capturadas
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=0.8\textwidth]{figures/ejemplo-captura.jpg}
+	\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}
+			[Ejemplo de imagen capturada por el nodo - 640x480 JPEG]
+			\vspace{3cm}}}
+	\caption{Ejemplo de imagen capturada por un nodo de cámara.}
+	\label{fig:ejemplo-captura}
+\end{figure}
+
+\subsection{Pruebas del sensor PIR}
+
+Se evaluó el funcionamiento del sensor HC-SR501:
+
+\begin{itemize}
+	\item Respuesta a movimiento de personas a diferentes distancias
+	\item Tiempo de respuesta desde detección hasta interrupción
+	\item Configuración óptima de sensibilidad y retardo
+	\item Tasa de falsas activaciones
+\end{itemize}
+
+% TODO: Agregar tabla con resultados de pruebas PIR
+\begin{table}[htbp]
+	\centering
+	\caption{Resultados de pruebas del sensor PIR.}
+	\label{tab:pruebas-pir}
+	\begin{tabular}{lc}
+		\hline
+		\textbf{Parámetro}            & \textbf{Valor} \\
+		\hline
+		Distancia máxima de detección & [X] m          \\
+		Tiempo de respuesta promedio  & [X] ms         \\
+		Falsas activaciones por hora  & [X]            \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Pruebas de transmisión mesh}
+
+Se verificó la transmisión de imágenes a través de la red \gls{mesh}:
+
+\begin{itemize}
+	\item Establecimiento de conexión entre nodos
+	\item Transmisión exitosa de imágenes completas
+	\item Tiempo de transmisión desde nodo hasta servidor
+	\item Comportamiento ante pérdida de conexión
+\end{itemize}
+
+% TODO: Agregar screenshot del log de transmisión
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=\textwidth]{figures/log-transmision.png}
+	\fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
+			[Screenshot del monitor serial mostrando transmisión exitosa]
+			\vspace{2cm}}}
+	\caption{Log de transmisión de imagen a través de la red mesh.}
+	\label{fig:log-transmision}
+\end{figure}
+
+\subsection{Pruebas del sistema de clasificación}
+
+Se evaluó el pipeline de detección y clasificación con imágenes de prueba:
+
+\begin{itemize}
+	\item Detección correcta de animales, personas y vehículos
+	\item Precisión de las \glspl{bounding-box}
+	\item Clasificación taxonómica de animales detectados
+	\item Tiempo de inferencia por imagen
+\end{itemize}
+
+% TODO: Agregar ejemplo de imagen procesada con detecciones
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=0.8\textwidth]{figures/ejemplo-deteccion.jpg}
+	\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}
+			[Imagen anotada con bounding boxes y etiquetas de clasificación]
+			\vspace{3cm}}}
+	\caption{Ejemplo de imagen procesada por el sistema de detección.}
+	\label{fig:ejemplo-deteccion}
+\end{figure}
+
+\subsection{Pruebas del sistema de alertas}
+
+Se verificó el funcionamiento del bot de Telegram:
+
+\begin{itemize}
+	\item Recepción correcta de notificaciones
+	\item Envío de imagen original y anotada
+	\item Información de detecciones y clasificaciones
+	\item Tiempo desde captura hasta notificación
+\end{itemize}
+
+% TODO: Agregar screenshot de notificación de Telegram
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=0.6\textwidth]{figures/telegram-notificacion.png}
+	\fbox{\parbox{0.6\textwidth}{\centering\vspace{4cm}
+			[Screenshot de notificación de Telegram con imágenes y detecciones]
+			\vspace{4cm}}}
+	\caption{Notificación recibida en Telegram con resultados de detección.}
+	\label{fig:telegram-notificacion}
+\end{figure}
+
+\section{Pruebas de campo}
+
+\subsection{Configuración del entorno}
+
+Las pruebas de campo se realizaron en un entorno exterior, instalando
+los nodos de cámara en ubicaciones representativas de un despliegue real.
+
+% TODO: Agregar foto del despliegue en campo
+\begin{figure}[htbp]
+	\centering
+	% \includegraphics[width=0.8\textwidth]{figures/despliegue-campo.jpg}
+	\fbox{\parbox{0.8\textwidth}{\centering\vspace{3cm}
+			[Foto de nodo instalado en árbol/poste en entorno exterior]
+			\vspace{3cm}}}
+	\caption{Nodo de cámara desplegado en entorno de pruebas de campo.}
+	\label{fig:despliegue-campo}
+\end{figure}
+
+\subsection{Condiciones de las pruebas}
+
+Las pruebas de campo se realizaron bajo las siguientes condiciones:
+
+\begin{itemize}
+	\item Duración: [X] horas de operación continua
+	\item Condiciones climáticas: [describir condiciones]
+	\item Número de nodos desplegados: 3
+	\item Distancia entre nodos: [X] metros
+	\item Distancia al router Wi-Fi: [X] metros
+\end{itemize}
+
+\subsection{Resultados obtenidos}
+
+Durante las pruebas de campo se registraron los siguientes resultados:
+
+% TODO: Completar con datos reales
+\begin{itemize}
+	\item Imágenes capturadas: [X]
+	\item Detecciones exitosas: [X]
+	\item Falsas activaciones: [X]
+	\item Tiempo de operación sin fallos: [X] horas
+\end{itemize}
+
+\section{Métricas de rendimiento de red}
+
 \subsection{Latencia de transmisión}
+
+Se midió el tiempo transcurrido desde la captura de imagen hasta la
+recepción en el servidor:
+
+% TODO: Agregar tabla con mediciones de latencia
+\begin{table}[htbp]
+	\centering
+	\caption{Latencia de transmisión medida.}
+	\label{tab:latencia}
+	\begin{tabular}{lc}
+		\hline
+		\textbf{Métrica}    & \textbf{Valor} \\
+		\hline
+		Latencia mínima     & [X] s          \\
+		Latencia promedio   & [X] s          \\
+		Latencia máxima     & [X] s          \\
+		Desviación estándar & [X] s          \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Distancia máxima entre nodos}
+
+Se evaluó la distancia máxima a la cual los nodos pueden mantener
+conexión estable:
+
+% TODO: Agregar resultados de pruebas de distancia
+\begin{table}[htbp]
+	\centering
+	\caption{Distancia máxima entre nodos.}
+	\label{tab:distancia}
+	\begin{tabular}{lc}
+		\hline
+		\textbf{Condición}          & \textbf{Distancia máxima} \\
+		\hline
+		Línea de vista directa      & [X] m                     \\
+		Con obstáculos (vegetación) & [X] m                     \\
+		Interior (paredes)          & [X] m                     \\
+		\hline
+	\end{tabular}
+\end{table}
+
 \subsection{Estabilidad de la conexión}
 
-\section{Pruebas de detección}
-\subsection{Detección de fauna silvestre}
-\subsection{Detección de humanos}
-\subsection{Detección de vehículos}
+Se monitoreó la estabilidad de la red durante operación prolongada:
 
-\section{Evaluación del modelo de IA}
-\subsection{Precisión y recall}
-\subsection{Tiempo de inferencia}
+\begin{itemize}
+	\item Número de reconexiones: [X]
+	\item Paquetes perdidos: [X]\%
+	\item Tiempo de reconexión promedio: [X] s
+\end{itemize}
 
-\section{Pruebas de consumo energético}
+\section{Métricas de clasificación}
 
-\section{Pruebas del sistema de alertas}
-\subsection{Tiempo de respuesta}
+\subsection{Precisión de detección}
+
+Se evaluó la precisión del sistema para detectar los diferentes tipos
+de objetos:
+
+% TODO: Agregar tabla de precisión de detección
+\begin{table}[htbp]
+	\centering
+	\caption{Precisión de detección por categoría.}
+	\label{tab:precision-deteccion}
+	\begin{tabular}{lccc}
+		\hline
+		\textbf{Categoría} & \textbf{Verdaderos +} & \textbf{Falsos +} & \textbf{Precisión} \\
+		\hline
+		Animales           & [X]                   & [X]               & [X]\%              \\
+		Personas           & [X]                   & [X]               & [X]\%              \\
+		Vehículos          & [X]                   & [X]               & [X]\%              \\
+		Vacías             & [X]                   & [X]               & [X]\%              \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Precisión de clasificación taxonómica}
+
+Para las imágenes con animales detectados, se evaluó la precisión de
+la clasificación taxonómica:
+
+% TODO: Agregar resultados de clasificación taxonómica
+\begin{table}[htbp]
+	\centering
+	\caption{Precisión de clasificación taxonómica.}
+	\label{tab:precision-taxonomica}
+	\begin{tabular}{lc}
+		\hline
+		\textbf{Nivel taxonómico} & \textbf{Precisión} \\
+		\hline
+		Familia                   & [X]\%              \\
+		Género                    & [X]\%              \\
+		Especie                   & [X]\%              \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\section{Métricas de consumo energético}
+
+\subsection{Consumo promedio del nodo}
+
+Se midió el consumo eléctrico del nodo en diferentes estados de operación:
+
+% TODO: Agregar tabla de consumo energético
+\begin{table}[htbp]
+	\centering
+	\caption{Consumo energético por estado de operación.}
+	\label{tab:consumo}
+	\begin{tabular}{lc}
+		\hline
+		\textbf{Estado}            & \textbf{Consumo (mA)} \\
+		\hline
+		Modo \gls{power-save}      & [X]                   \\
+		Captura de imagen          & [X]                   \\
+		Transmisión Wi-Fi          & [X]                   \\
+		Consumo promedio ponderado & [X]                   \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Autonomía estimada}
+
+Basándose en el consumo promedio y la capacidad de las baterías:
+
+% TODO: Completar cálculo de autonomía
+\begin{itemize}
+	\item Capacidad del pack 2S: [X] mAh
+	\item Consumo promedio: [X] mA
+	\item Autonomía teórica: [X] horas
+	\item Autonomía medida en pruebas: [X] horas
+\end{itemize}
 
 \section{Análisis de resultados}
+
+Los resultados obtenidos demuestran la viabilidad del sistema propuesto
+para el monitoreo de áreas protegidas. A continuación se presenta un
+análisis de los principales hallazgos:
+
+\subsection{Cumplimiento de objetivos}
+
+% TODO: Completar análisis de cumplimiento
+\begin{description}
+	\item[Detección de fauna:] [Análisis del desempeño en detección]
+	\item[Latencia de respuesta:] [Análisis de tiempos de respuesta]
+	\item[Cobertura de red:] [Análisis de alcance y estabilidad]
+	\item[Autonomía energética:] [Análisis de consumo y duración]
+\end{description}
+
+\subsection{Limitaciones observadas}
+
+Durante las pruebas se identificaron las siguientes limitaciones:
+
+\begin{itemize}
+	\item Limitación 1 observada
+	\item Limitación 2 observada
+	\item Limitación 3 observada
+\end{itemize}
+
+\subsection{Comparación con objetivos planteados}
+
+% TODO: Agregar tabla comparativa
+\begin{table}[htbp]
+	\centering
+	\caption{Comparación de resultados con objetivos planteados.}
+	\label{tab:comparacion-objetivos}
+	\begin{tabular}{lcc}
+		\hline
+		\textbf{Métrica}       & \textbf{Objetivo} & \textbf{Resultado} \\
+		\hline
+		Latencia de respuesta  & < X min           & [X] min            \\
+		Precisión de detección & > X\%             & [X]\%              \\
+		Autonomía              & > X horas         & [X] horas          \\
+		Cobertura              & > X m             & [X] m              \\
+		\hline
+	\end{tabular}
+\end{table}
 
 % ==============================================================================
 % Capítulo 9: Conclusiones
@@ -1543,11 +2214,151 @@ Las pruebas del sistema completo se realizaron en dos fases:
 
 \section{Conclusiones generales}
 
+El presente trabajo demostró la viabilidad técnica de un sistema de
+monitoreo de bajo costo para áreas protegidas, basado en nodos de cámara
+con conectividad \gls{mesh} y clasificación automática de imágenes
+mediante \gls{ia}.
+
+Los principales logros alcanzados incluyen:
+
+\begin{itemize}
+	\item Se diseñó e implementó un sistema completo de monitoreo que
+	      integra hardware de bajo costo (ESP32-CAM, sensores PIR) con
+	      tecnologías de \gls{ia} de vanguardia (\gls{speciesnet},
+	      \gls{megadetector}).
+
+	\item Se logró reducir significativamente el tiempo de procesamiento
+	      de imágenes desde días o semanas ---típico de las \glspl{camara-trampa}
+	      tradicionales--- a minutos, habilitando respuestas operativas
+	      antes imposibles.
+
+	\item Se demostró que las redes \gls{mesh} basadas en \gls{ESP-MESH}
+	      son una alternativa viable para extender la cobertura de monitoreo
+	      en áreas sin infraestructura de red, manteniendo la capacidad de
+	      transmitir imágenes.
+
+	\item Se validó la integración de modelos de detección y clasificación
+	      taxonómica en un pipeline de procesamiento automatizado, capaz de
+	      distinguir entre fauna, personas y vehículos.
+
+	\item Se implementó un sistema de alertas en tiempo operativo mediante
+	      Telegram, proporcionando notificaciones inmediatas con imágenes
+	      anotadas y clasificaciones a los usuarios finales.
+\end{itemize}
+
+El costo total de los componentes de hardware para un nodo de cámara se
+mantiene significativamente por debajo de las cámaras trampa comerciales
+con capacidades similares de conectividad, validando la propuesta de un
+sistema de bajo costo accesible para proyectos de conservación con
+recursos limitados.
+
 \section{Aportes del trabajo}
+
+Este trabajo realiza los siguientes aportes:
+
+\begin{description}
+	\item[Arquitectura de sistema integrado:] Se propone una arquitectura
+	      que combina captura distribuida, transmisión mesh y procesamiento
+	      centralizado con \gls{ia}, aplicable a diversos escenarios de
+	      monitoreo ambiental.
+
+	\item[Prototipo funcional de bajo costo:] Se desarrolló un prototipo
+	      completo y funcional utilizando componentes comerciales de bajo
+	      costo, con diseños de carcasa listos para fabricación mediante
+	      impresión 3D.
+
+	\item[Integración de SpeciesNet en pipeline de tiempo operativo:] Se
+	      demostró la viabilidad de utilizar modelos de clasificación
+	      taxonómica entrenados en grandes datasets de \glspl{camara-trampa}
+	      en un sistema de respuesta rápida.
+
+	\item[Código abierto:] Todo el código desarrollado (firmware, servidor,
+	      servicio de detección) está disponible en repositorios públicos de
+	      GitHub, permitiendo la reproducción y extensión del trabajo por
+	      parte de otros investigadores y desarrolladores.
+\end{description}
 
 \section{Trabajos futuros}
 
+A partir de los resultados obtenidos, se identifican las siguientes
+líneas de trabajo futuro:
+
+\begin{description}
+	\item[Visión nocturna:] Incorporar módulos de cámara con capacidad
+	      infrarroja para permitir la captura de imágenes durante la noche,
+	      extendiendo significativamente la utilidad del sistema para
+	      monitoreo de fauna con hábitos nocturnos.
+
+	\item[Conectividad de largo alcance:] Reemplazar el enlace Wi-Fi entre
+	      el nodo raíz y el servidor por tecnologías de mayor alcance como
+	      LoRa, redes celulares (4G/LTE) o enlaces satelitales, permitiendo
+	      despliegues en zonas remotas sin cobertura de internet convencional.
+
+	\item[Optimización del consumo energético:] Investigar estrategias
+	      adicionales de ahorro de energía, incluyendo paneles solares y
+	      algoritmos de gestión de batería más sofisticados.
+
+	\item[Implementación de nodo rama:] Una alternativa considerada pero no
+	      implementada ---para reducir la complejidad del prototipo--- es el
+	      diseño de un tercer tipo de nodo: un ``nodo rama'' o repetidor
+	      dedicado que mantendría la red mesh activa. Esto permitiría que
+	      los nodos de cámara funcionen como nodos hoja y utilicen el modo
+	      \gls{deep-sleep} verdadero, despertando únicamente ante
+	      interrupciones del sensor \gls{pir}, conectándose brevemente a la
+	      red para transmitir la imagen, y volviendo a dormir. Esta
+	      arquitectura podría reducir drásticamente el consumo promedio de
+	      los nodos de cámara.
+
+	\item[Procesamiento en el borde:] Explorar la posibilidad de realizar
+	      inferencia directamente en los nodos de cámara utilizando modelos
+	      optimizados (TinyML), reduciendo el volumen de datos transmitidos
+	      y la latencia de respuesta.
+
+	\item[Mejoras en clasificación:] Entrenar o afinar modelos específicos
+	      para la fauna de la región del Bosque Atlántico, mejorando la
+	      precisión de clasificación para especies locales.
+
+	\item[Interfaz de usuario:] Desarrollar una interfaz web más completa
+	      que permita visualización en mapa, gestión de múltiples despliegues
+	      y generación de reportes automatizados.
+\end{description}
+
 \section{Recomendaciones}
+
+Basándose en la experiencia adquirida durante el desarrollo y pruebas
+del sistema, se realizan las siguientes recomendaciones para futuras
+implementaciones:
+
+\begin{enumerate}
+	\item \textbf{Selección de ubicaciones:} Considerar cuidadosamente la
+	      distancia entre nodos y la presencia de obstáculos al planificar
+	      el despliegue. La vegetación densa reduce significativamente el
+	      alcance de la señal Wi-Fi.
+
+	\item \textbf{Protección contra elementos:} Para despliegues de largo
+	      plazo, utilizar materiales de impresión 3D resistentes a la
+	      intemperie (\gls{petg} o \gls{asa}) y considerar el uso de
+	      selladores adicionales.
+
+	\item \textbf{Capacidad de batería:} Dimensionar los packs de baterías
+	      según la frecuencia esperada de activaciones. El diseño del
+	      prototipo con \gls{buck-converter} permite alimentación desde un
+	      amplio rango de voltajes de entrada (4.5V-40V), facilitando el uso
+	      de packs de baterías \gls{18650} en diversas configuraciones (2S,
+	      3S, 4S) o sistemas de recarga solar.
+
+	\item \textbf{Selección del sensor de movimiento:} El sensor \gls{pir}
+	      domótico utilizado en el prototipo (HC-SR501) está optimizado para
+	      detectar personas y puede no activarse consistentemente ante fauna
+	      de menor porte. Para despliegues enfocados en monitoreo de fauna
+	      silvestre, se recomienda evaluar sensores \gls{pir} de mayor
+	      sensibilidad o tecnologías alternativas de detección de movimiento
+	      diseñadas para aplicaciones de vida silvestre.
+
+	\item \textbf{Monitoreo remoto:} Implementar sistemas de monitoreo de
+	      estado de los nodos (nivel de batería, conectividad) para
+	      identificar problemas antes de que resulten en pérdida de datos.
+\end{enumerate}
 
 % ==============================================================================
 % Referencias
