@@ -607,53 +607,153 @@ mediante técnicas de \gls{ia}.
 
 \section{Sistemas de monitoreo actuales}
 
-Actualmente, el monitoreo biológico y de vigilancia en Misiones depende de
-métodos que, si bien son efectivos para la investigación, presentan brechas
-operativas para la seguridad ambiental.
+Actualmente, el monitoreo biológico y de vigilancia en las áreas protegidas de
+Misiones emplea una combinación de métodos tradicionales que, si bien han
+demostrado ser efectivos para la investigación científica, presentan brechas
+operativas significativas cuando se aplican a la seguridad ambiental y la
+detección de actividades ilícitas.
 
 \subsection{Cámaras trampa convencionales}
 
-El uso de \glspl{camara-trampa} pasivas es el estándar de oro para la
-investigación de fauna. Se instalan en puntos estratégicos y capturan imágenes
-activadas por sensores de calor y movimiento. Sin embargo, estas cámaras son
-dispositivos aislados; las imágenes se almacenan localmente en tarjetas SD que
-deben ser retiradas físicamente por personal especializado cada varios meses.
+El uso de \glspl{camara-trampa} pasivas constituye el estándar de referencia
+para el monitoreo de fauna silvestre a nivel mundial \cite{steenweg2017scaling}.
+Estos dispositivos se instalan en puntos estratégicos ---senderos de fauna,
+fuentes de agua, zonas de paso--- y capturan imágenes automáticamente mediante
+sensores de calor y movimiento (\gls{sensor-pir}).
 
-\subsection{Limitaciones de los sistemas existentes}
+Las \glspl{camara-trampa} tradicionales presentan las siguientes características
+operativas:
 
-La principal limitación es el retraso temporal entre el evento y su análisis.
-Un acto de \gls{caza-furtiva} detectado por una cámara tradicional solo será
-descubierto meses después, impidiendo cualquier acción disuasoria o legal
-inmediata. Además, el alto volumen de imágenes capturadas (frecuentemente
-disparadas por vegetación en movimiento) requiere cientos de horas-hombre para
-su clasificación manual. Las soluciones comerciales con conectividad celular,
-aunque existan, son inviables debido a la falta de señal en zonas profundas y
-los altos costos operativos de mantenimiento de múltiples líneas móviles.
+\begin{itemize}
+	\item \textbf{Autonomía energética:} Funcionan con baterías AA o paneles
+	      solares, permitiendo operación autónoma durante meses.
+	\item \textbf{Almacenamiento local:} Las imágenes se guardan en tarjetas
+	      SD que deben ser retiradas físicamente para su análisis.
+	\item \textbf{Activación pasiva:} El sensor \gls{pir} detecta cambios de
+	      temperatura asociados al movimiento de animales o personas.
+	\item \textbf{Operación silenciosa:} Los modelos con flash infrarrojo
+	      (\gls{ir}) permiten capturas nocturnas sin alertar a la fauna.
+\end{itemize}
+
+En Misiones, estas cámaras son utilizadas tanto por organismos gubernamentales
+como por organizaciones de conservación para el monitoreo del yaguareté,
+realizar censos de fauna, y documentar la biodiversidad de las reservas
+\cite{vidasilvestre2024censo}.
+
+\subsection{Patrullajes terrestres}
+
+Complementariamente, el Cuerpo de Guardaparques realiza patrullajes periódicos
+a pie, en vehículo o a caballo. Estos recorridos permiten detectar indicios
+de actividad ilícita (campamentos, trampas, rastros de tala) y establecer
+presencia disuasoria en las áreas protegidas.
+
+Sin embargo, la efectividad de los patrullajes está limitada por factores
+logísticos: la densidad de la vegetación restringe la visibilidad, los
+desplazamientos consumen tiempo considerable, y la cobertura territorial
+depende directamente de los recursos humanos disponibles.
+
+\subsection{Brechas tecnológicas identificadas}
+
+El análisis de los sistemas actuales revela brechas críticas que limitan
+la capacidad de respuesta ante eventos de interés:
+
+\begin{description}
+	\item[Latencia en la información:] Las imágenes capturadas por cámaras
+	      tradicionales permanecen almacenadas localmente durante semanas o
+	      meses hasta su recolección. Un evento de \gls{caza-furtiva} registrado
+	      por una cámara solo será conocido mucho después de ocurrido,
+	      impidiendo cualquier acción disuasoria o legal inmediata.
+	\item[Clasificación manual:] El alto volumen de imágenes capturadas
+	      ---frecuentemente disparadas por movimiento de vegetación, aves, o
+	      pequeños mamíferos no relevantes--- demanda cientos de horas-hombre
+	      para su revisión y clasificación manual \cite{tabak2019machine}.
+	\item[Ausencia de alertas:] Los sistemas actuales no generan notificaciones
+	      en \gls{tiempo-real}. La información fluye de manera unidireccional
+	      desde el campo hacia los centros de análisis, sin retroalimentación
+	      inmediata.
+	\item[Conectividad limitada:] Las soluciones comerciales con transmisión
+	      celular, aunque existen en el mercado \cite{tactacam2024reveal,
+		      spypoint2024cellular}, resultan inviables en las zonas interiores de
+	      la selva donde no existe cobertura de red móvil, además de representar
+	      costos operativos elevados para despliegues a escala.
+\end{description}
+
+Estas brechas fundamentan la necesidad de desarrollar un sistema que combine
+la robustez de las cámaras de campo con capacidades de transmisión en red,
+procesamiento automático mediante \gls{ia}, y generación de alertas en
+\gls{tiempo-real}.
 
 \section{Justificación del proyecto}
 
-Dada la crítica situación de biodiversidad en Misiones y las limitaciones de
-los sistemas actuales, se justifica el desarrollo de una solución tecnológica
-que sea:
+El análisis de las problemáticas de conservación y las limitaciones de los
+sistemas de monitoreo actuales permite identificar una brecha tecnológica
+que este proyecto propone abordar.
+
+\subsection{Urgencia de la problemática}
+
+La \gls{selva-misionera} representa el último remanente continuo del
+\gls{bosque-atlantico} en Argentina, albergando más del 50\% de la biodiversidad
+del país en menos del 0.5\% de su territorio \cite{dibitetti2003yaguarete}. La
+presión sobre este ecosistema es constante: entre 1990 y 2020 se perdieron
+130\,000 hectáreas de bosque nativo solo en el \gls{corredor-verde}
+\cite{fauba2024corredorverde}, mientras que especies emblemáticas como el
+yaguareté mantienen poblaciones críticamente bajas ---aproximadamente 84
+individuos según el último censo \cite{vidasilvestre2024censo}.
+
+La \gls{caza-furtiva}, la tala ilegal y la intrusión en áreas protegidas
+continúan siendo amenazas activas que requieren respuestas inmediatas. Sin
+embargo, los sistemas de monitoreo actuales operan con latencias de semanas
+o meses, imposibilitando cualquier acción preventiva o disuasoria.
+
+\subsection{Oportunidad tecnológica}
+
+La convergencia de tres desarrollos tecnológicos recientes crea una oportunidad
+única para abordar esta problemática:
+
+\begin{description}
+	\item[Microcontroladores de bajo costo:] Plataformas como el \gls{ESP32}
+	      ofrecen capacidades de procesamiento, conectividad Wi-Fi y gestión
+	      de energía a costos inferiores a los 10 dólares por unidad, permitiendo
+	      despliegues a escala con presupuestos limitados.
+	\item[Redes mesh autoorganizadas:] Protocolos como \gls{ESP-MESH} permiten
+	      extender la conectividad en áreas sin infraestructura celular,
+	      creando redes que se adaptan dinámicamente a la topología del terreno
+	      y toleran fallos de nodos individuales.
+	\item[Inteligencia artificial para visión:] Modelos de \gls{codigo-abierto}
+	      como \gls{speciesnet} \cite{gadot2024crop} y \gls{megadetector}
+	      \cite{beery2019megadetector} permiten clasificar automáticamente
+	      imágenes de \glspl{camara-trampa}, distinguiendo fauna silvestre
+	      de personas y vehículos con alta precisión.
+\end{description}
+
+\subsection{Requisitos del sistema propuesto}
+
+Dada la crítica situación de biodiversidad en Misiones y las brechas identificadas
+en los sistemas actuales, se justifica el desarrollo de una solución tecnológica
+que cumpla con los siguientes requisitos:
+
 \begin{enumerate}
-	\item \textbf{De Bajo Costo:} Permitiendo un despliegue masivo con
-	      presupuesto limitado, utilizando hardware basado en \gls{ESP32} y
-	      componentes de \gls{codigo-abierto}.
-	\item \textbf{Con Conectividad Independiente:} Utilizando redes \gls{mesh}
-	      que no requieran infraestructura celular previa, adaptándose a la topología
-	      de la selva.
-	\item \textbf{Inteligente y Automatizada:} Integrando modelos de \gls{ia}
-	      como \gls{speciesnet} para filtrar imágenes relevantes en \gls{tiempo-real},
-	      notificando inmediatamente ante eventos críticos (intrusos o fauna en
-	      peligro).
-	\item \textbf{Fabricable Localmente:} Empleando tecnologías como la
-	      \gls{impresion-3d} para la creación de carcasas duraderas y personalizadas.
+	\item \textbf{Bajo costo de implementación:} Permitiendo un despliegue
+	      distribuido con presupuesto limitado, utilizando hardware basado en
+	      \gls{ESP32} y software de \gls{codigo-abierto}.
+	\item \textbf{Conectividad independiente:} Empleando redes \gls{mesh} que
+	      no requieran infraestructura celular preexistente, adaptándose a la
+	      topología irregular de la selva subtropical.
+	\item \textbf{Procesamiento inteligente:} Integrando modelos de \gls{ia}
+	      como \gls{speciesnet} para filtrar y clasificar imágenes automáticamente,
+	      reduciendo el volumen de datos a revisar manualmente.
+	\item \textbf{Alertas en tiempo real:} Generando notificaciones inmediatas
+	      ante la detección de eventos críticos, ya sea la presencia de fauna
+	      en peligro para fines de investigación, o la detección de intrusos
+	      para fines de seguridad.
 \end{enumerate}
 
 Este proyecto no solo representa un aporte técnico en el área de redes de
-sensores e inteligencia artificial, sino que constituye una herramienta de
-aplicación directa para fortalecer la vigilancia de las áreas protegidas de
-la región.
+sensores e \gls{ia} aplicada a la conservación, sino que constituye una
+herramienta de aplicación directa para fortalecer la vigilancia de las áreas
+protegidas de la región, democratizando el acceso a tecnologías de monitoreo
+inteligente que tradicionalmente han estado reservadas a instituciones con
+mayores recursos.
 
 % ==============================================================================
 % Capítulo 4: Objetivos y Alcance
