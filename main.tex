@@ -762,11 +762,149 @@ mayores recursos.
 
 \section{Objetivo general}
 
+Demostrar la viabilidad técnica de un sistema de monitoreo de bajo costo para
+áreas protegidas, basado en nodos de cámara con conectividad \gls{mesh} y
+clasificación automática de imágenes mediante \gls{ia}. El sistema deberá ser
+capaz de detectar la presencia de animales, personas y vehículos, así como
+realizar una \gls{clasificacion-taxonomica} de la fauna identificada. Todo esto
+reduciendo significativamente el tiempo de procesamiento de datos desde días o
+semanas ---típico de las \glspl{camara-trampa} tradicionales--- a minutos.
+
 \section{Objetivos específicos}
+
+\begin{enumerate}
+	\item \textbf{Diseñar e implementar un nodo de cámara autónomo} basado en
+	      microcontroladores \gls{ESP32}, capaz de capturar imágenes mediante
+	      activación por sensor \gls{pir} y transmitirlas a través de una red
+	      \gls{mesh}.
+
+	\item \textbf{Desarrollar una red mesh autoorganizada} utilizando el
+	      protocolo \gls{ESP-MESH}, que permita extender la conectividad en
+	      áreas sin cobertura celular mediante el encadenamiento de nodos
+	      intermedios.
+
+	\item \textbf{Implementar un servidor de procesamiento} capaz de recibir
+	      las imágenes transmitidas por la red, clasificarlas automáticamente
+	      mediante modelos de \gls{ia} preentrenados, y generar notificaciones
+	      ante la detección de eventos de interés.
+
+	\item \textbf{Integrar un modelo de clasificación de fauna} como
+	      \gls{speciesnet} o \gls{megadetector}, adaptado para identificar
+	      las principales categorías de interés: fauna silvestre, personas y
+	      vehículos.
+
+	\item \textbf{Validar el funcionamiento del sistema} en condiciones
+	      controladas, evaluando métricas de rendimiento como latencia de
+	      transmisión, consumo energético, precisión de clasificación y
+	      estabilidad de la red.
+\end{enumerate}
 
 \section{Alcance del proyecto}
 
+El presente proyecto tiene como alcance el desarrollo de un prototipo funcional
+que demuestre la viabilidad del concepto propuesto. Se contemplan los siguientes
+aspectos:
+
+\subsection{Dentro del alcance}
+
+\begin{itemize}
+	\item Diseño y construcción de nodos de cámara basados en módulos
+	      \gls{ESP32}-CAM con sensor \gls{pir} comercial.
+	\item Implementación de la red \gls{mesh} con capacidad de transmisión de
+	      imágenes comprimidas.
+	\item Desarrollo del servidor de recepción, almacenamiento y clasificación
+	      de imágenes.
+	\item Integración de un modelo de \gls{ia} preentrenado para la
+	      clasificación automática.
+	\item Sistema de notificaciones mediante bot de \gls{telegram-bot}.
+	\item Pruebas de funcionamiento en entorno controlado (laboratorio).
+	\item Validación a pequeña escala en condiciones de campo reales, bajo
+	      circunstancias climáticas favorables (día soleado, sin lluvia),
+	      dadas las limitaciones de protección del prototipo.
+\end{itemize}
+
+\subsection{Fuera del alcance}
+
+\begin{itemize}
+	\item Despliegue en áreas protegidas reales o ambientes de selva densa.
+	\item Diseño de carcasas con \gls{grado-proteccion-ip} para uso permanente
+	      en exteriores.
+	\item Entrenamiento de modelos de \gls{ia} específicos para fauna de la
+	      región.
+	\item Certificación de equipos para uso comercial o institucional.
+	\item Integración con sistemas de gestión de áreas protegidas existentes.
+\end{itemize}
+
 \section{Limitaciones}
+
+Es importante explicitar las limitaciones técnicas inherentes al prototipo
+desarrollado, tanto para establecer expectativas adecuadas como para orientar
+trabajos futuros.
+
+\subsection{Limitaciones de hardware}
+
+\begin{description}
+	\item[Autonomía energética:] Los nodos de cámara \gls{ESP32} presentan un
+	      consumo energético significativo durante la transmisión Wi-Fi. Si
+	      bien se implementan estrategias de ahorro de energía, la autonomía
+	      con baterías convencionales es limitada comparada con cámaras trampa
+	      comerciales optimizadas durante años para este propósito.
+
+	\item[Sensor de movimiento:] Se utiliza un sensor \gls{pir} domótico
+	      convencional, cuyas características de detección están optimizadas
+	      para uso en interiores. Esto implica que el sistema es capaz de
+	      detectar confiablemente animales de gran porte (tapires, yaguaretés,
+	      ciervos) y personas, pero puede no activarse consistentemente ante
+	      fauna de menor tamaño como aves o pequeños mamíferos.
+
+	\item[Operación diurna:] El módulo de cámara utilizado incorpora un lente
+	      con filtro \gls{ir}, lo que limita su operación a condiciones de
+	      luz diurna. A diferencia de las cámaras trampa comerciales que
+	      incluyen iluminación infrarroja para capturas nocturnas, el prototipo
+	      desarrollado no cuenta con esta capacidad.
+
+	\item[Resolución de imagen:] Además de las limitaciones propias del sensor
+	      OV2640, los protocolos \gls{ESP-MESH} y \gls{ESP-MDF} imponen
+	      restricciones en el tamaño máximo de los datos transmitidos por
+	      paquete. Esto limita la resolución efectiva de las imágenes que
+	      pueden transmitirse a través de la red, requiriendo compresión
+	      adicional que afecta la calidad final.
+\end{description}
+
+\subsection{Consideraciones sobre el tiempo de respuesta}
+
+Es necesario clarificar el uso del término \gls{tiempo-real} en el contexto de
+este proyecto. En sistemas embebidos, ``tiempo real'' típicamente se refiere a
+la capacidad de responder a eventos dentro de plazos determinísticos estrictos,
+frecuentemente en el orden de milisegundos o microsegundos.
+
+En el contexto de este proyecto, la noción de tiempo real se utiliza en un
+sentido operativo diferente: la capacidad de reducir la latencia de
+procesamiento de imágenes desde \textbf{días o semanas} a \textbf{minutos}.
+Los tiempos prolongados característicos de las \glspl{camara-trampa} tradicionales
+se deben a la necesidad de desplazarse físicamente hasta cada dispositivo para
+recolectar las tarjetas de memoria, y posteriormente procesar las imágenes de
+forma manual o semiautomática. Este cambio de escala temporal, aunque no
+constituye tiempo real en el sentido determinístico, representa una mejora
+de varios órdenes de magnitud que habilita respuestas operativas antes imposibles.
+
+\subsection{Limitaciones de alcance}
+
+\begin{description}
+	\item[Rango de comunicación:] El alcance de cada nodo \gls{mesh} depende
+	      de las condiciones del terreno y la vegetación. En zonas de selva
+	      densa, puede ser necesario un mayor número de nodos intermedios para
+	      cubrir distancias equivalentes a las alcanzables en campo abierto.
+
+	\item[Ancho de banda:] La transmisión de imágenes a través de la red
+	      \gls{mesh} consume ancho de banda significativo. Capturas simultáneas
+	      en múltiples nodos pueden generar congestión y aumentar la latencia.
+
+	\item[Clasificación de especies:] Los modelos de \gls{ia} utilizados están
+	      entrenados con datasets globales que pueden no incluir todas las
+	      especies presentes en la \gls{selva-misionera}, afectando la precisión
+	      de clasificación taxonómica a nivel de especie.
+\end{description}
 
 % ==============================================================================
 % Capítulo 5: Marco Teórico
